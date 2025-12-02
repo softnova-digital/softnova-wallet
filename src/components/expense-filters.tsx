@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { CalendarIcon, Search, X, Filter, ChevronDown } from "lucide-react";
+import { CalendarIcon, Search, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -72,7 +72,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
   const hasFilters = search || categoryId || startDate || endDate;
   const activeFilterCount = [search, categoryId, startDate, endDate].filter(Boolean).length;
 
-  const FilterContent = () => (
+  const filterContent = (
     <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium text-muted-foreground">Search</label>
@@ -313,7 +313,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
             <SheetHeader className="pb-4">
               <SheetTitle>Filter Expenses</SheetTitle>
             </SheetHeader>
-            <FilterContent />
+            {filterContent}
           </SheetContent>
         </Sheet>
       </div>

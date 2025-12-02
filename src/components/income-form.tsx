@@ -40,7 +40,7 @@ import type { IncomeCategory, Income } from "@/types";
 const incomeSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   description: z.string().min(1, "Description is required"),
-  date: z.date({ required_error: "Date is required" }),
+  date: z.date({ message: "Date is required" }),
   source: z.string().min(1, "Source is required"),
   categoryId: z.string().min(1, "Category is required"),
 });

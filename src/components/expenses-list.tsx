@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Edit, Trash2, Receipt, MoreHorizontal, ChevronRight } from "lucide-react";
@@ -57,11 +57,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
 
-  useEffect(() => {
-    fetchExpenses();
-  }, [searchParams]);
-
-  async function fetchExpenses() {
+  const fetchExpenses = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -84,7 +80,11 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
   async function handleDelete() {
     if (!deleteExpense) return;

@@ -56,8 +56,8 @@ export function SpendingChart({ data }: SpendingChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px] sm:h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[250px] sm:h-[300px] min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
               <Pie
                 data={data}

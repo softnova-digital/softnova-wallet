@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Edit, Trash2, Wallet, MoreHorizontal, ChevronRight } from "lucide-react";
@@ -56,11 +56,7 @@ export function IncomesList({ categories }: IncomesListProps) {
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteIncome, setDeleteIncome] = useState<Income | null>(null);
 
-  useEffect(() => {
-    fetchIncomes();
-  }, [searchParams]);
-
-  async function fetchIncomes() {
+  const fetchIncomes = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -83,7 +79,11 @@ export function IncomesList({ categories }: IncomesListProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchIncomes();
+  }, [fetchIncomes]);
 
   async function handleDelete() {
     if (!deleteIncome) return;

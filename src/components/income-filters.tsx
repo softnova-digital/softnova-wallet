@@ -72,7 +72,7 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
   const hasFilters = search || categoryId || startDate || endDate;
   const activeFilterCount = [search, categoryId, startDate, endDate].filter(Boolean).length;
 
-  const FilterContent = () => (
+  const filterContent = (
     <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium text-muted-foreground">Search</label>
@@ -312,7 +312,7 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
             <SheetHeader className="pb-4">
               <SheetTitle>Filter Incomes</SheetTitle>
             </SheetHeader>
-            <FilterContent />
+            {filterContent}
           </SheetContent>
         </Sheet>
       </div>

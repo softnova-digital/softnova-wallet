@@ -7,7 +7,6 @@ import { RecentIncomes } from "@/components/recent-incomes";
 import { BudgetOverview } from "@/components/budget-overview";
 import { SpendingChart } from "@/components/spending-chart";
 import {
-  DollarSign,
   TrendingUp,
   TrendingDown,
   Receipt,
@@ -88,19 +87,6 @@ export default async function DashboardPage() {
       date: {
         gte: lastMonthStart,
         lte: lastMonthEnd,
-      },
-    },
-    _sum: {
-      amount: true,
-    },
-  });
-
-  // Get this week's expenses
-  const thisWeekExpenses = await db.expense.aggregate({
-    where: {
-      date: {
-        gte: weekStart,
-        lte: weekEnd,
       },
     },
     _sum: {
