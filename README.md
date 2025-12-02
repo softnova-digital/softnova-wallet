@@ -124,4 +124,4 @@ This is an internal tool for Softnova Digital.
 
 ## License
 
-Private - Softnova Digital.
+Private - Softnova Digital
