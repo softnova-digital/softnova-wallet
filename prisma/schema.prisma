@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  icon      String    @default("folder")
+  color     String    @default("#2ECC71")
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expenses  Expense[]
+  budgets   Budget[]
+}
+
+model IncomeCategory {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String   @default("wallet")
+  color     String   @default("#3498DB")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  incomes   Income[]
+}
+
+model Label {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  color     String         @default("#2ECC71")
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  expenses  ExpenseLabel[]
+}
+
+model Expense {
+  id          String         @id @default(cuid())
+  amount      Float
+  description String
+  date        DateTime
+  payee       String
+  categoryId  String
+  category    Category       @relation(fields: [categoryId], references: [id])
+  labels      ExpenseLabel[]
+  receiptUrl  String?
+  userId      String
+  userName    String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([date])
+}
+
+model Income {
+  id          String         @id @default(cuid())
+  amount      Float
+  description String
+  date        DateTime
+  source      String // Who paid you (client name, employer, etc.)
+  categoryId  String
+  category    IncomeCategory @relation(fields: [categoryId], references: [id])
+  userId      String
+  userName    String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([date])
+}
+
+model ExpenseLabel {
+  id        String  @id @default(cuid())
+  expenseId String
+  labelId   String
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  label     Label   @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, labelId])
+}
+
+model Budget {
+  id         String    @id @default(cuid())
+  amount     Float
+  period     String // "weekly", "monthly", "yearly"
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  userId     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([period, categoryId, userId])
+  @@index([userId])
+}

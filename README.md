@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Softnova Digital - Expense Tracker
+
+A full-stack expense management application built for Softnova Digital to track company expenses, manage budgets, and categorize spending.
+
+## Features
+
+- **Authentication**: Secure login with Clerk (2 partner accounts)
+- **Expense Management**: Add, edit, delete expenses with detailed information
+  - Amount, description, date
+  - Payee/Payer tracking
+  - Custom labels for organization
+  - Track who recorded each expense
+  - Receipt attachments
+- **Categories**: Full CRUD for expense categories with icons and colors
+- **Budget Tracking**: Set and monitor weekly, monthly, or yearly budgets
+  - Overall or per-category budgets
+  - Visual progress indicators
+  - Budget alerts when approaching limits
+- **Dashboard**: Overview with charts and recent activity
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Authentication**: Clerk
+- **Database**: Neon PostgreSQL with Prisma ORM
+- **UI**: Tailwind CSS + shadcn/ui
+- **Charts**: Recharts
+- **Forms**: React Hook Form + Zod
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- npm or yarn
+- Neon PostgreSQL account
+- Clerk account
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd softnova-expenses
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Fill in your credentials in `.env`:
+```env
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+CLERK_SECRET_KEY=sk_test_xxx
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
-## Learn More
+# Neon PostgreSQL
+DATABASE_URL="postgresql://user:password@host.neon.tech/database?sslmode=require"
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Set up the database:
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Seed default categories:
+```bash
+npx tsx prisma/seed.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+6. Run the development server:
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+softnova-expenses/
+├── prisma/
+│   ├── schema.prisma    # Database schema
+│   └── seed.ts          # Default categories seed
+├── src/
+│   ├── app/
+│   │   ├── (dashboard)/ # Protected dashboard routes
+│   │   │   ├── page.tsx       # Dashboard home
+│   │   │   ├── expenses/      # Expenses management
+│   │   │   ├── budgets/       # Budget management
+│   │   │   ├── categories/    # Category management
+│   │   │   └── settings/      # Labels & settings
+│   │   ├── api/         # API routes
+│   │   ├── sign-in/     # Clerk sign in
+│   │   └── sign-up/     # Clerk sign up
+│   ├── components/      # React components
+│   │   └── ui/          # shadcn/ui components
+│   ├── lib/             # Utilities
+│   └── types/           # TypeScript types
+└── public/
+    └── uploads/         # Receipt uploads
+```
+
+## Database Schema
+
+- **Category**: Expense categories (name, icon, color)
+- **Label**: Custom tags for expenses
+- **Expense**: Main expense records (amount, description, date, payee, category, labels, receipt, who spent)
+- **Budget**: Budget limits (amount, period, category)
+
+## Contributing
+
+This is an internal tool for Softnova Digital.
+
+## License
+
+Private - Softnova Digital
