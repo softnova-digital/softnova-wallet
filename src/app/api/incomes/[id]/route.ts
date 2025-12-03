@@ -15,8 +15,11 @@ export async function GET(
 
     const { id } = await params;
 
-    const income = await db.income.findUnique({
-      where: { id },
+    const income = await db.income.findFirst({
+      where: { 
+        id,
+        userId, // Verify ownership
+      },
       include: {
         category: true,
       },
@@ -51,6 +54,15 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const { amount, description, date, source, categoryId } = body;
+
+    // Verify ownership before updating
+    const existingIncome = await db.income.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existingIncome) {
+      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+    }
 
     const income = await db.income.update({
       where: { id },
@@ -89,6 +101,15 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Verify ownership before deleting
+    const income = await db.income.findFirst({
+      where: { id, userId },
+    });
+
+    if (!income) {
+      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+    }
 
     await db.income.delete({
       where: { id },

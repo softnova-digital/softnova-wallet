@@ -11,14 +11,34 @@ export default async function CategoriesPage() {
     redirect("/sign-in");
   }
 
-  const categories = await db.category.findMany({
-    orderBy: { name: "asc" },
-    include: {
-      _count: {
-        select: { expenses: true },
+  // Optimize: Use parallel queries and filter expense count by userId
+  const [categories, expenseCounts] = await Promise.all([
+    db.category.findMany({
+      orderBy: { name: "asc" },
+    }),
+    // Get expense counts per category for this user
+    db.expense.groupBy({
+      by: ["categoryId"],
+      where: {
+        userId, // Filter by userId for performance
       },
+      _count: {
+        id: true,
+      },
+    }),
+  ]);
+
+  // Map expense counts to categories
+  const expenseCountMap = new Map(
+    expenseCounts.map((ec) => [ec.categoryId, ec._count.id])
+  );
+
+  const categoriesWithCount = categories.map((category) => ({
+    ...category,
+    _count: {
+      expenses: expenseCountMap.get(category.id) || 0,
     },
-  });
+  }));
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -32,7 +52,7 @@ export default async function CategoriesPage() {
         <AddCategoryButton />
       </div>
 
-      <CategoriesList categories={categories} />
+      <CategoriesList categories={categoriesWithCount} />
     </div>
   );
 }

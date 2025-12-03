@@ -29,6 +29,9 @@ export default async function BudgetsPage() {
 
   const [budgets, categories] = await Promise.all([
     db.budget.findMany({
+      where: {
+        userId, // Filter by userId for security and performance
+      },
       include: {
         category: true,
       },
@@ -39,49 +42,54 @@ export default async function BudgetsPage() {
     }),
   ]);
 
-  // Calculate spent amount for each budget
-  const budgetsWithSpent = await Promise.all(
-    budgets.map(async (budget) => {
-      let periodStart: Date;
-      let periodEnd: Date;
+  // Calculate spent amount for each budget - optimized to avoid N+1 queries
+  // Group budgets by period type to batch queries
+  const budgetQueries = budgets.map((budget) => {
+    let periodStart: Date;
+    let periodEnd: Date;
 
-      switch (budget.period) {
-        case "weekly":
-          periodStart = weekStart;
-          periodEnd = weekEnd;
-          break;
-        case "monthly":
-          periodStart = monthStart;
-          periodEnd = monthEnd;
-          break;
-        case "yearly":
-          periodStart = yearStart;
-          periodEnd = yearEnd;
-          break;
-        default:
-          periodStart = monthStart;
-          periodEnd = monthEnd;
-      }
+    switch (budget.period) {
+      case "weekly":
+        periodStart = weekStart;
+        periodEnd = weekEnd;
+        break;
+      case "monthly":
+        periodStart = monthStart;
+        periodEnd = monthEnd;
+        break;
+      case "yearly":
+        periodStart = yearStart;
+        periodEnd = yearEnd;
+        break;
+      default:
+        periodStart = monthStart;
+        periodEnd = monthEnd;
+    }
 
-      const expenses = await db.expense.aggregate({
-        where: {
-          date: {
-            gte: periodStart,
-            lte: periodEnd,
-          },
-          ...(budget.categoryId ? { categoryId: budget.categoryId } : {}),
+    return db.expense.aggregate({
+      where: {
+        userId, // Critical: Filter by userId
+        date: {
+          gte: periodStart,
+          lte: periodEnd,
         },
-        _sum: {
-          amount: true,
-        },
-      });
+        ...(budget.categoryId ? { categoryId: budget.categoryId } : {}),
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+  });
 
-      return {
-        ...budget,
-        spent: expenses._sum.amount || 0,
-      };
-    })
-  );
+  const budgetExpenses = await Promise.all(budgetQueries);
+
+  const budgetsWithSpent = budgets.map((budget, index) => {
+    const spent = budgetExpenses[index]._sum.amount || 0;
+    return {
+      ...budget,
+      spent,
+    };
+  });
 
   return (
     <div className="space-y-4 sm:space-y-6">

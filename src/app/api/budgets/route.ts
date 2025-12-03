@@ -17,6 +17,9 @@ export async function GET() {
     }
 
     const budgets = await db.budget.findMany({
+      where: {
+        userId, // Filter by userId for security and performance
+      },
       include: {
         category: true,
       },

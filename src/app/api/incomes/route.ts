@@ -15,8 +15,12 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {
+      userId, // Critical: Filter by userId for security and performance
+    };
 
     if (categoryId) {
       where.categoryId = categoryId;
@@ -39,15 +43,28 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const incomes = await db.income.findMany({
-      where,
-      orderBy: { date: "desc" },
-      include: {
-        category: true,
+    const [incomes, total] = await Promise.all([
+      db.income.findMany({
+        where,
+        orderBy: { date: "desc" },
+        include: {
+          category: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.income.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      incomes,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
-
-    return NextResponse.json({ incomes });
   } catch (error) {
     console.error("Error fetching incomes:", error);
     return NextResponse.json(

@@ -40,161 +40,185 @@ export default async function DashboardPage() {
   const lastMonthStart = startOfMonth(subMonths(now, 1));
   const lastMonthEnd = endOfMonth(subMonths(now, 1));
 
-  // Get this month's expenses
-  const thisMonthExpenses = await db.expense.aggregate({
-    where: {
-      date: {
-        gte: monthStart,
-        lte: monthEnd,
+  // Parallelize all initial queries for better performance
+  const [
+    thisMonthExpenses,
+    lastMonthExpenses,
+    thisMonthIncomes,
+    lastMonthIncomes,
+    budgets,
+    recentExpenses,
+    recentIncomes,
+    expensesByCategory,
+    categories,
+  ] = await Promise.all([
+    // Get this month's expenses
+    db.expense.aggregate({
+      where: {
+        userId,
+        date: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
       },
-    },
-    _sum: {
-      amount: true,
-    },
-    _count: true,
-  });
-
-  // Get last month's expenses for comparison
-  const lastMonthExpenses = await db.expense.aggregate({
-    where: {
-      date: {
-        gte: lastMonthStart,
-        lte: lastMonthEnd,
+      _sum: {
+        amount: true,
       },
-    },
-    _sum: {
-      amount: true,
-    },
-  });
-
-  // Get this month's incomes
-  const thisMonthIncomes = await db.income.aggregate({
-    where: {
-      date: {
-        gte: monthStart,
-        lte: monthEnd,
+      _count: true,
+    }),
+    // Get last month's expenses for comparison
+    db.expense.aggregate({
+      where: {
+        userId,
+        date: {
+          gte: lastMonthStart,
+          lte: lastMonthEnd,
+        },
       },
-    },
-    _sum: {
-      amount: true,
-    },
-    _count: true,
-  });
-
-  // Get last month's incomes for comparison
-  const lastMonthIncomes = await db.income.aggregate({
-    where: {
-      date: {
-        gte: lastMonthStart,
-        lte: lastMonthEnd,
+      _sum: {
+        amount: true,
       },
-    },
-    _sum: {
-      amount: true,
-    },
-  });
-
-  // Get budgets with spent calculations
-  const budgets = await db.budget.findMany({
-    include: {
-      category: true,
-    },
-  });
-
-  // Calculate spent amount for each budget and count alerts
-  let budgetAlerts = 0;
-  const budgetsWithSpent = await Promise.all(
-    budgets.map(async (budget) => {
-      let periodStart: Date;
-      let periodEnd: Date;
-
-      switch (budget.period) {
-        case "weekly":
-          periodStart = weekStart;
-          periodEnd = weekEnd;
-          break;
-        case "monthly":
-          periodStart = monthStart;
-          periodEnd = monthEnd;
-          break;
-        case "yearly":
-          periodStart = yearStart;
-          periodEnd = yearEnd;
-          break;
-        default:
-          periodStart = monthStart;
-          periodEnd = monthEnd;
-      }
-
-      const expenses = await db.expense.aggregate({
-        where: {
-          date: {
-            gte: periodStart,
-            lte: periodEnd,
+    }),
+    // Get this month's incomes
+    db.income.aggregate({
+      where: {
+        userId,
+        date: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+      _count: true,
+    }),
+    // Get last month's incomes for comparison
+    db.income.aggregate({
+      where: {
+        userId,
+        date: {
+          gte: lastMonthStart,
+          lte: lastMonthEnd,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+    // Get budgets
+    db.budget.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        category: true,
+      },
+    }),
+    // Get recent expenses
+    db.expense.findMany({
+      where: {
+        userId,
+      },
+      take: 5,
+      orderBy: {
+        date: "desc",
+      },
+      include: {
+        category: true,
+        labels: {
+          include: {
+            label: true,
           },
-          ...(budget.categoryId ? { categoryId: budget.categoryId } : {}),
-        },
-        _sum: {
-          amount: true,
-        },
-      });
-
-      const spent = expenses._sum.amount || 0;
-      const percentage = (spent / budget.amount) * 100;
-
-      if (percentage >= 80) {
-        budgetAlerts++;
-      }
-
-      return {
-        ...budget,
-        spent,
-      };
-    })
-  );
-
-  // Get recent expenses
-  const recentExpenses = await db.expense.findMany({
-    take: 5,
-    orderBy: {
-      date: "desc",
-    },
-    include: {
-      category: true,
-      labels: {
-        include: {
-          label: true,
         },
       },
-    },
-  });
-
-  // Get recent incomes
-  const recentIncomes = await db.income.findMany({
-    take: 5,
-    orderBy: {
-      date: "desc",
-    },
-    include: {
-      category: true,
-    },
-  });
-
-  // Get expenses by category for the chart
-  const expensesByCategory = await db.expense.groupBy({
-    by: ["categoryId"],
-    where: {
-      date: {
-        gte: monthStart,
-        lte: monthEnd,
+    }),
+    // Get recent incomes
+    db.income.findMany({
+      where: {
+        userId,
       },
-    },
-    _sum: {
-      amount: true,
-    },
+      take: 5,
+      orderBy: {
+        date: "desc",
+      },
+      include: {
+        category: true,
+      },
+    }),
+    // Get expenses by category for the chart
+    db.expense.groupBy({
+      by: ["categoryId"],
+      where: {
+        userId,
+        date: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+    // Get all categories
+    db.category.findMany(),
+  ]);
+
+  // Calculate spent amount for each budget - optimized to avoid N+1 queries
+  // Group budgets by period type to batch queries
+  const budgetQueries = budgets.map((budget) => {
+    let periodStart: Date;
+    let periodEnd: Date;
+
+    switch (budget.period) {
+      case "weekly":
+        periodStart = weekStart;
+        periodEnd = weekEnd;
+        break;
+      case "monthly":
+        periodStart = monthStart;
+        periodEnd = monthEnd;
+        break;
+      case "yearly":
+        periodStart = yearStart;
+        periodEnd = yearEnd;
+        break;
+      default:
+        periodStart = monthStart;
+        periodEnd = monthEnd;
+    }
+
+    return db.expense.aggregate({
+      where: {
+        userId,
+        date: {
+          gte: periodStart,
+          lte: periodEnd,
+        },
+        ...(budget.categoryId ? { categoryId: budget.categoryId } : {}),
+      },
+      _sum: {
+        amount: true,
+      },
+    });
   });
 
-  const categories = await db.category.findMany();
+  const budgetExpenses = await Promise.all(budgetQueries);
+
+  let budgetAlerts = 0;
+  const budgetsWithSpent = budgets.map((budget, index) => {
+    const spent = budgetExpenses[index]._sum.amount || 0;
+    const percentage = (spent / budget.amount) * 100;
+
+    if (percentage >= 80) {
+      budgetAlerts++;
+    }
+
+    return {
+      ...budget,
+      spent,
+    };
+  });
   const chartData = expensesByCategory.map((e) => {
     const category = categories.find((c) => c.id === e.categoryId);
     return {

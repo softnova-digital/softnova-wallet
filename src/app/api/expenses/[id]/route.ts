@@ -25,8 +25,11 @@ export async function GET(
 
     const { id } = await params;
 
-    const expense = await db.expense.findUnique({
-      where: { id },
+    const expense = await db.expense.findFirst({
+      where: { 
+        id,
+        userId, // Verify ownership
+      },
       include: {
         category: true,
         labels: {
@@ -66,6 +69,15 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const validatedData = updateExpenseSchema.parse(body);
+
+    // Verify ownership before updating
+    const existingExpense = await db.expense.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existingExpense) {
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+    }
 
     // Delete existing labels if new ones are provided
     if (validatedData.labelIds !== undefined) {
@@ -128,6 +140,15 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Verify ownership before deleting
+    const expense = await db.expense.findFirst({
+      where: { id, userId },
+    });
+
+    if (!expense) {
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+    }
 
     await db.expense.delete({
       where: { id },

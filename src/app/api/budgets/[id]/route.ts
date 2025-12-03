@@ -21,8 +21,11 @@ export async function GET(
 
     const { id } = await params;
 
-    const budget = await db.budget.findUnique({
-      where: { id },
+    const budget = await db.budget.findFirst({
+      where: { 
+        id,
+        userId, // Verify ownership
+      },
       include: {
         category: true,
       },
@@ -55,6 +58,15 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const validatedData = updateBudgetSchema.parse(body);
+
+    // Verify ownership before updating
+    const existingBudget = await db.budget.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existingBudget) {
+      return NextResponse.json({ error: "Budget not found" }, { status: 404 });
+    }
 
     const budget = await db.budget.update({
       where: { id },
@@ -91,6 +103,15 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Verify ownership before deleting
+    const budget = await db.budget.findFirst({
+      where: { id, userId },
+    });
+
+    if (!budget) {
+      return NextResponse.json({ error: "Budget not found" }, { status: 404 });
+    }
 
     await db.budget.delete({
       where: { id },

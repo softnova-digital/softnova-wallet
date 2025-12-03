@@ -12,12 +12,13 @@ export default async function IncomesPage() {
     redirect("/sign-in");
   }
 
-  const categories = await db.incomeCategory.findMany({
+  // Check if categories exist and create defaults if needed - optimized
+  const existingCategory = await db.incomeCategory.findFirst({
     orderBy: { name: "asc" },
   });
 
-  // If no income categories exist, create default ones
-  if (categories.length === 0) {
+  if (!existingCategory) {
+    // Create default categories in a single transaction
     const defaultCategories = [
       { name: "Salary", icon: "briefcase", color: "#3498DB" },
       { name: "Freelance", icon: "laptop", color: "#9B59B6" },
@@ -32,31 +33,14 @@ export default async function IncomesPage() {
         ...cat,
         isDefault: true,
       })),
+      skipDuplicates: true,
     });
-
-    // Refetch after creating
-    const newCategories = await db.incomeCategory.findMany({
-      orderBy: { name: "asc" },
-    });
-
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Incomes</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Track and manage all your income sources
-            </p>
-          </div>
-          <AddIncomeButton categories={newCategories} />
-        </div>
-
-        <IncomeFilters categories={newCategories} />
-        
-        <IncomesList categories={newCategories} />
-      </div>
-    );
   }
+
+  // Fetch all categories (now guaranteed to exist)
+  const categories = await db.incomeCategory.findMany({
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className="space-y-4 sm:space-y-6">
