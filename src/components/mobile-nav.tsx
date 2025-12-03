@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, LayoutDashboard, Receipt, Wallet, PiggyBank, Tags, Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -46,12 +47,17 @@ export function MobileNav({ user }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
-        <SheetHeader className="border-b border-border px-6 py-4">
+        <SheetHeader className="border-b border-border px-6 py-6">
           <SheetTitle asChild>
-            <Link href="/" className="flex items-center gap-1" onClick={() => setOpen(false)}>
-              <span className="text-xl font-bold text-foreground">Soft</span>
-              <span className="text-xl font-bold text-primary">noVa</span>
-              <span className="ml-2 text-xs text-muted-foreground">Expenses</span>
+            <Link href="/" className="flex items-center justify-center w-full" onClick={() => setOpen(false)}>
+              <Image 
+                src="/logo.png" 
+                alt="Company Logo" 
+                width={240} 
+                height={88} 
+                className="h-20 md:h-24 w-auto object-contain"
+                priority
+              />
             </Link>
           </SheetTitle>
         </SheetHeader>
