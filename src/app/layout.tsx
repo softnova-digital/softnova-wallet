@@ -21,7 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signUpUrl={undefined}
+      signUpFallbackRedirectUrl={undefined}
+    >
       <html lang="en" className="dark">
         <body className={`${dmSans.variable} font-sans antialiased`}>
           {children}

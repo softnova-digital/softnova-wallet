@@ -4,7 +4,7 @@ A full-stack expense management application built for Softnova Digital to track 
 
 ## Features
 
-- **Authentication**: Secure login with Clerk (2 partner accounts)
+- **Authentication**: Secure login with Clerk (Single company user only - sign-up disabled)
 - **Expense Management**: Add, edit, delete expenses with detailed information
   - Amount, description, date
   - Payee/Payer tracking
@@ -59,9 +59,8 @@ Fill in your credentials in `.env`:
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
 CLERK_SECRET_KEY=sk_test_xxx
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+# Note: Sign-up is disabled - this is a single company user application
 
 # Neon PostgreSQL
 DATABASE_URL="postgresql://user:password@host.neon.tech/database?sslmode=require"
@@ -101,8 +100,7 @@ softnova-expenses/
 │   │   │   ├── categories/    # Category management
 │   │   │   └── settings/      # Labels & settings
 │   │   ├── api/         # API routes
-│   │   ├── sign-in/     # Clerk sign in
-│   │   └── sign-up/     # Clerk sign up
+│   │   └── sign-in/     # Clerk sign in (sign-up disabled)
 │   ├── components/      # React components
 │   │   └── ui/          # shadcn/ui components
 │   ├── lib/             # Utilities
