@@ -120,6 +120,30 @@ softnova-expenses/
 
 This is an internal tool for Softnova Digital.
 
+## Production Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed production deployment instructions.
+
+### Quick Production Checklist
+
+- ✅ Set production environment variables
+- ✅ Run database migrations
+- ✅ Build and test: `npm run build && npm start`
+- ✅ Configure security headers (already set in `next.config.ts`)
+- ✅ Set up error monitoring
+- ✅ Configure file upload storage
+
+## Performance Optimizations
+
+This project includes several production optimizations:
+
+- **Image Optimization**: Automatic WebP/AVIF conversion and responsive sizing
+- **Code Splitting**: Next.js automatic code splitting
+- **Database Queries**: Optimized with parallel queries and proper indexing
+- **Bundle Size**: Tree-shaking and package import optimization
+- **Caching**: ETags and appropriate cache headers
+- **Security**: Security headers, input validation, and authentication on all routes
+
 ## License
 
 Private - Softnova Digital

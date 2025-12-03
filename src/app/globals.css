@@ -393,6 +393,51 @@
   background: var(--muted-foreground);
 }
 
+/* Modern Grid Background Pattern */
+.grid-background {
+  position: relative;
+  background-color: var(--background);
+}
+
+.grid-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 1px 1px, var(--border) 0.5px, transparent 0);
+  background-size: 32px 32px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-background > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dark mode grid adjustments - more subtle */
+.dark .grid-background::before {
+  opacity: 0.04;
+}
+
+.dark .grid-background::after {
+  opacity: 0.02;
+}
+
 /* Hide Clerk sign-up link */
 .cl-rootBox .cl-footerActionLink,
 .cl-rootBox .cl-footerAction,

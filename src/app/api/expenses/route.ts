@@ -2,12 +2,13 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { PARTNERS } from "@/lib/constants";
 
 const createExpenseSchema = z.object({
   amount: z.number().positive(),
   description: z.string().min(1),
   date: z.string(),
-  payee: z.string().min(1),
+  payee: z.enum(PARTNERS),
   categoryId: z.string().min(1),
   labelIds: z.array(z.string()).optional(),
   receiptUrl: z.string().optional(),
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get("categoryId");
+    const payee = searchParams.get("payee");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const search = searchParams.get("search");
@@ -34,6 +36,10 @@ export async function GET(request: NextRequest) {
 
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    if (payee && payee !== "all") {
+      where.payee = payee;
     }
 
     if (startDate && endDate) {

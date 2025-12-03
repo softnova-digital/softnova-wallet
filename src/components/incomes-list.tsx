@@ -186,7 +186,7 @@ export function IncomesList({ categories }: IncomesListProps) {
                     {format(new Date(income.date), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right font-semibold text-green-600">
-                    +${income.amount.toLocaleString("en-US", {
+                    +₹{income.amount.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                     })}
                   </TableCell>
@@ -255,7 +255,7 @@ export function IncomesList({ categories }: IncomesListProps) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-green-600">
-                      +${income.amount.toLocaleString("en-US", {
+                      +₹{income.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </p>

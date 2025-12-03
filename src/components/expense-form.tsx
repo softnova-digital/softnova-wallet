@@ -38,12 +38,15 @@ import { cn } from "@/lib/utils";
 import type { Category, Label, Expense } from "@/types";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { UploadButton } from "@/components/upload-button";
+import { PARTNERS } from "@/lib/constants";
 
 const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   description: z.string().min(1, "Description is required"),
   date: z.date({ message: "Date is required" }),
-  payee: z.string().min(1, "Payee is required"),
+  payee: z.enum(PARTNERS, {
+    message: "Please select who paid for this expense",
+  }),
   categoryId: z.string().min(1, "Category is required"),
   labelIds: z.array(z.string()),
   receiptUrl: z.string().optional(),
@@ -76,7 +79,7 @@ export function ExpenseForm({
       amount: expense?.amount?.toString() || "",
       description: expense?.description || "",
       date: expense?.date ? new Date(expense.date) : new Date(),
-      payee: expense?.payee || "",
+      payee: (expense?.payee as ExpenseFormValues["payee"]) || PARTNERS[0],
       categoryId: expense?.categoryId || "",
       labelIds: expense?.labels?.map((l) => l.label.id) || [],
       receiptUrl: expense?.receiptUrl || undefined,
@@ -138,7 +141,7 @@ export function ExpenseForm({
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount ($)</FormLabel>
+                <FormLabel>Amount (₹)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -217,10 +220,21 @@ export function ExpenseForm({
           name="payee"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Payee / Payer</FormLabel>
-              <FormControl>
-                <Input placeholder="Who received the payment?" {...field} />
-              </FormControl>
+              <FormLabel>Paid By</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select who paid for this expense" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {PARTNERS.map((partner) => (
+                    <SelectItem key={partner} value={partner}>
+                      {partner}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

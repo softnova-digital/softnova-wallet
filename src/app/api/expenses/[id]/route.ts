@@ -2,12 +2,13 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { PARTNERS } from "@/lib/constants";
 
 const updateExpenseSchema = z.object({
   amount: z.number().positive().optional(),
   description: z.string().min(1).optional(),
   date: z.string().optional(),
-  payee: z.string().min(1).optional(),
+  payee: z.enum(PARTNERS).optional(),
   categoryId: z.string().min(1).optional(),
   labelIds: z.array(z.string()).optional(),
   receiptUrl: z.string().optional().nullable(),

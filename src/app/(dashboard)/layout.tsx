@@ -1,7 +1,6 @@
 import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
   LayoutDashboard,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/nav-link";
 import { MobileNav } from "@/components/mobile-nav";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -47,16 +47,11 @@ export default async function DashboardLayout({
       <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-card hidden lg:block animate-slide-in-left">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-32 items-center border-b border-border px-6">
+          <div className="flex h-20 items-center border-b border-border px-4">
             <Link href="/" className="flex items-center gap-2 group w-full justify-center">
-              <Image 
-                src="/logo.png" 
-                alt="Company Logo" 
-                width={280} 
-                height={100} 
-                className="h-24 w-auto object-contain transition-opacity group-hover:opacity-80"
-                priority
-              />
+              <div className="transition-opacity group-hover:opacity-80">
+                <Logo variant="sidebar" />
+              </div>
             </Link>
           </div>
 
@@ -94,23 +89,16 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-24 md:h-28 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 md:px-4 lg:hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 md:h-20 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 md:px-4 lg:hidden">
         <MobileNav user={userData} />
         <Link href="/" className="flex items-center flex-1 justify-center">
-          <Image 
-            src="/logo.png" 
-            alt="Company Logo" 
-            width={220} 
-            height={80} 
-            className="h-16 md:h-20 w-auto object-contain"
-            priority
-          />
+          <Logo variant="mobile" />
         </Link>
         <UserButton afterSignOutUrl="/sign-in" />
       </header>
 
       {/* Main content */}
-      <main className="lg:ml-64 min-h-screen pt-24 md:pt-28 lg:pt-0">
+      <main className="lg:ml-64 min-h-screen pt-16 md:pt-20 lg:pt-0 grid-background">
         <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">{children}</div>
       </main>
     </div>

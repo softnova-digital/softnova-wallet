@@ -1,9 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { IncomesList } from "@/components/incomes-list";
 import { IncomeFilters } from "@/components/income-filters";
 import { AddIncomeButton } from "@/components/add-income-button";
+
+export const metadata: Metadata = {
+  title: "Incomes",
+  description: "Track and manage all your income sources",
+};
 
 export default async function IncomesPage() {
   const { userId } = await auth();
@@ -60,6 +66,3 @@ export default async function IncomesPage() {
     </div>
   );
 }
-
-
-

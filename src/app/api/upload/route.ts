@@ -44,9 +44,13 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadsDir, { recursive: true });
     }
 
-    // Generate unique filename
+    // Generate unique filename (sanitize extension)
     const timestamp = Date.now();
-    const extension = file.name.split(".").pop();
+    const originalExtension = file.name.split(".").pop()?.toLowerCase() || "";
+    const validExtensions = ["jpg", "jpeg", "png", "gif", "pdf"];
+    const extension = validExtensions.includes(originalExtension) 
+      ? originalExtension 
+      : "bin";
     const filename = `${userId}-${timestamp}.${extension}`;
     const filepath = join(uploadsDir, filename);
 

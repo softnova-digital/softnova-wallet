@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { DashboardCard } from "@/components/dashboard-card";
 import { RecentExpenses } from "@/components/recent-expenses";
@@ -22,6 +23,11 @@ import {
   endOfYear,
   subMonths,
 } from "date-fns";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Overview of your company finances",
+};
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -257,7 +263,7 @@ export default async function DashboardPage() {
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           title="Monthly Income"
-          value={`$${thisMonthIncomeTotal.toLocaleString("en-US", {
+          value={`₹${thisMonthIncomeTotal.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
           description="from last month"
@@ -271,7 +277,7 @@ export default async function DashboardPage() {
         />
         <DashboardCard
           title="Monthly Expenses"
-          value={`$${thisMonthExpenseTotal.toLocaleString("en-US", {
+          value={`₹${thisMonthExpenseTotal.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
           description="from last month"
@@ -284,7 +290,7 @@ export default async function DashboardPage() {
         />
         <DashboardCard
           title="Net Balance"
-          value={`${netBalance >= 0 ? '+' : '-'}$${Math.abs(netBalance).toLocaleString("en-US", {
+          value={`${netBalance >= 0 ? '+' : '-'}₹${Math.abs(netBalance).toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
           description="this month"

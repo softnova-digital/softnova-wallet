@@ -1,9 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LabelsList } from "@/components/labels-list";
 import { AddLabelButton } from "@/components/add-label-button";
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "Manage your expense tracking preferences",
+};
 
 export default async function SettingsPage() {
   const { userId } = await auth();

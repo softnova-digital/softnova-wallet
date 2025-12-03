@@ -203,13 +203,13 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
                           <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">
-                                ${budget.spent.toLocaleString("en-US", {
+                                ₹{budget.spent.toLocaleString("en-IN", {
                                   minimumFractionDigits: 2,
                                 })}{" "}
                                 spent
                               </span>
                               <span className="font-medium">
-                                ${budget.amount.toLocaleString("en-US", {
+                                ₹{budget.amount.toLocaleString("en-IN", {
                                   minimumFractionDigits: 2,
                                 })}
                               </span>
@@ -233,15 +233,15 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
                                 <div className="flex items-center gap-1 text-destructive text-sm font-medium">
                                   <AlertTriangle className="h-4 w-4" />
                                   <span>
-                                    Over by $
-                                    {Math.abs(remaining).toLocaleString("en-US", {
+                                    Over by ₹
+                                    {Math.abs(remaining).toLocaleString("en-IN", {
                                       minimumFractionDigits: 2,
                                     })}
                                   </span>
                                 </div>
                               ) : (
                                 <span className="text-sm text-muted-foreground">
-                                  ${remaining.toLocaleString("en-US", {
+                                  ₹{remaining.toLocaleString("en-IN", {
                                     minimumFractionDigits: 2,
                                   })}{" "}
                                   remaining

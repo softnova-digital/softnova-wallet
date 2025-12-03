@@ -11,8 +11,28 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Softnova Expenses | Expense Management",
-  description: "Track and manage expenses for Softnova Digital",
+  title: {
+    default: "Softnova Expenses | Expense Management",
+    template: "%s | Softnova Expenses",
+  },
+  description: "Track and manage expenses, incomes, and budgets for Softnova Digital",
+  keywords: ["expense management", "budget tracking", "finance", "Softnova Digital"],
+  authors: [{ name: "Softnova Digital" }],
+  creator: "Softnova Digital",
+  metadataBase: process.env.NEXT_PUBLIC_APP_URL
+    ? new URL(process.env.NEXT_PUBLIC_APP_URL)
+    : undefined,
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Softnova Expenses",
+    title: "Softnova Expenses | Expense Management",
+    description: "Track and manage expenses, incomes, and budgets for Softnova Digital",
+  },
+  robots: {
+    index: false, // Private application - don't index
+    follow: false,
+  },
 };
 
 export default function RootLayout({

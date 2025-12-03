@@ -84,8 +84,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                   </Badge>
                 </div>
                 <span className="text-xs sm:text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">${spent.toLocaleString("en-US", { minimumFractionDigits: 0 })}</span>
-                  <span className="hidden sm:inline"> / ${budget.amount.toLocaleString("en-US", { minimumFractionDigits: 0 })}</span>
+                  <span className="font-medium text-foreground">₹{spent.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
+                  <span className="hidden sm:inline"> / ₹{budget.amount.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
                 </span>
               </div>
               <div className="relative">

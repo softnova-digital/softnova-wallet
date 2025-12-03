@@ -107,11 +107,11 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>Amount (₹)</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
+                      ₹
                     </span>
                     <Input
                       type="number"

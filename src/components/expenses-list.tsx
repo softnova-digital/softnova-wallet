@@ -62,11 +62,13 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     try {
       const params = new URLSearchParams();
       const categoryId = searchParams.get("categoryId");
+      const payee = searchParams.get("payee");
       const startDate = searchParams.get("startDate");
       const endDate = searchParams.get("endDate");
       const search = searchParams.get("search");
 
       if (categoryId && categoryId !== "all") params.set("categoryId", categoryId);
+      if (payee && payee !== "all") params.set("payee", payee);
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
       if (search) params.set("search", search);
@@ -142,8 +144,8 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
             <TableRow className="hover:bg-transparent">
               <TableHead>Description</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Payee</TableHead>
-              <TableHead>Spent By</TableHead>
+              <TableHead>Paid By</TableHead>
+              <TableHead>Recorded By</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -211,7 +213,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                     {format(new Date(expense.date), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
-                    ${expense.amount.toLocaleString("en-US", {
+                    ₹{expense.amount.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                     })}
                   </TableCell>
@@ -309,7 +311,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold">
-                      ${expense.amount.toLocaleString("en-US", {
+                      ₹{expense.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </p>

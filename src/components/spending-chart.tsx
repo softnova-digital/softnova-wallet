@@ -94,8 +94,8 @@ export function SpendingChart({ data }: SpendingChartProps) {
                           <p className="font-medium">{chartData.name}</p>
                         </div>
                         <p className="text-primary font-semibold text-lg mt-1">
-                          $
-                          {chartData.value.toLocaleString("en-US", {
+                          ₹
+                          {chartData.value.toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
                           })}
                         </p>

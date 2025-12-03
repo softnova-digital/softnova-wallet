@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { BudgetsList } from "@/components/budgets-list";
 import { AddBudgetButton } from "@/components/add-budget-button";
@@ -11,6 +12,11 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns";
+
+export const metadata: Metadata = {
+  title: "Budgets",
+  description: "Set and track your spending limits",
+};
 
 export default async function BudgetsPage() {
   const { userId } = await auth();

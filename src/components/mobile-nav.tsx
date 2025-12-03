@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, LayoutDashboard, Receipt, Wallet, PiggyBank, Tags, Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -16,6 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -47,17 +47,10 @@ export function MobileNav({ user }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
-        <SheetHeader className="border-b border-border px-6 py-6">
+        <SheetHeader className="border-b border-border px-4 py-4">
           <SheetTitle asChild>
             <Link href="/" className="flex items-center justify-center w-full" onClick={() => setOpen(false)}>
-              <Image 
-                src="/logo.png" 
-                alt="Company Logo" 
-                width={240} 
-                height={88} 
-                className="h-20 md:h-24 w-auto object-contain"
-                priority
-              />
+              <Logo variant="mobile" />
             </Link>
           </SheetTitle>
         </SheetHeader>

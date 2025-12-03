@@ -1,8 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { CategoriesList } from "@/components/categories-list";
 import { AddCategoryButton } from "@/components/add-category-button";
+
+export const metadata: Metadata = {
+  title: "Categories",
+  description: "Manage expense categories for better organization",
+};
 
 export default async function CategoriesPage() {
   const { userId } = await auth();

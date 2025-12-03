@@ -117,7 +117,7 @@ export function RecentExpenses({ expenses }: RecentExpensesProps) {
                 </div>
                 <div className="text-right shrink-0 ml-3">
                   <p className="font-semibold text-sm sm:text-base">
-                    ${expense.amount.toLocaleString("en-US", {
+                    ₹{expense.amount.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                     })}
                   </p>

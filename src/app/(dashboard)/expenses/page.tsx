@@ -1,9 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ExpensesList } from "@/components/expenses-list";
 import { ExpenseFilters } from "@/components/expense-filters";
 import { AddExpenseButton } from "@/components/add-expense-button";
+
+export const metadata: Metadata = {
+  title: "Expenses",
+  description: "Track and manage all your business expenses",
+};
 
 export default async function ExpensesPage() {
   const { userId } = await auth();
