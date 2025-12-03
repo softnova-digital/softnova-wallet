@@ -24,9 +24,13 @@ export default function SignInPage() {
               formFieldLabel: "text-foreground",
               formFieldInput:
                 "bg-background border-input text-foreground",
-              footerActionLink: "text-primary hover:text-primary/80",
+              footerActionLink: "hidden",
+              footerAction: "hidden",
             },
           }}
+          routing="path"
+          path="/sign-in"
+          signUpUrl={undefined}
         />
       </div>
     </div>

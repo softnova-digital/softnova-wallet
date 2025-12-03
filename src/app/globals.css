@@ -393,6 +393,15 @@
   background: var(--muted-foreground);
 }
 
+/* Hide Clerk sign-up link */
+.cl-rootBox .cl-footerActionLink,
+.cl-rootBox .cl-footerAction,
+.cl-rootBox a[href*="sign-up"],
+.cl-rootBox [data-localization-key="signUp.start.signUpLink"],
+.cl-footerActionLink {
+  display: none !important;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
