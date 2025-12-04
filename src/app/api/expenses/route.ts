@@ -4,6 +4,10 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { PARTNERS } from "@/lib/constants";
 
+// Cache configuration for GET requests
+export const revalidate = 10; // Revalidate every 10 seconds
+export const dynamic = "force-dynamic"; // Force dynamic for user-specific data
+
 const createExpenseSchema = z.object({
   amount: z.number().positive(),
   description: z.string().optional(), // Description is now optional

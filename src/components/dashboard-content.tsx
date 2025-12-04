@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { DashboardCard } from "@/components/dashboard-card";
 import { RecentExpenses } from "@/components/recent-expenses";
 import { RecentIncomes } from "@/components/recent-incomes";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { useDashboard } from "@/hooks/use-dashboard";
 
-export function DashboardContent() {
+export const DashboardContent = memo(function DashboardContent() {
   const { data, isLoading, error } = useDashboard();
 
   if (isLoading) {
@@ -137,5 +138,5 @@ export function DashboardContent() {
       </div>
     </div>
   );
-}
+});
 

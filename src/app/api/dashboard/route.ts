@@ -11,7 +11,11 @@ import {
   subMonths,
 } from "date-fns";
 
-export async function GET(request: NextRequest) {
+// Cache configuration for dashboard data
+export const revalidate = 30; // Revalidate every 30 seconds
+export const dynamic = "force-dynamic"; // Force dynamic rendering for user-specific data
+
+export async function GET() {
   try {
     const { userId } = await auth();
 

@@ -14,7 +14,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:migrate": "prisma migrate dev",
-    "postinstall": "prisma generate"
+    "db:migrate:deploy": "prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.5",

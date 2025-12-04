@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -25,7 +26,7 @@ interface RecentIncomesProps {
   incomes: IncomeWithCategory[];
 }
 
-export function RecentIncomes({ incomes }: RecentIncomesProps) {
+export const RecentIncomes = memo(function RecentIncomes({ incomes }: RecentIncomesProps) {
   if (incomes.length === 0) {
     return (
       <Card className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
@@ -117,7 +118,7 @@ export function RecentIncomes({ incomes }: RecentIncomesProps) {
       </CardContent>
     </Card>
   );
-}
+});
 
 
 

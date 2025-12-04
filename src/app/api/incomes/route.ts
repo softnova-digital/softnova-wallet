@@ -2,6 +2,10 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+// Cache configuration for GET requests
+export const revalidate = 10; // Revalidate every 10 seconds
+export const dynamic = "force-dynamic"; // Force dynamic for user-specific data
+
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();

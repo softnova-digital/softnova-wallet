@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   
+  // Production output configuration for Vercel
+  output: "standalone",
+  
   // Image optimization
   images: {
     formats: ["image/avif", "image/webp"],
@@ -12,6 +15,14 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Optimize for Cloudinary
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
   },
   
   // Enable compression
@@ -21,7 +32,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   
-  // Security headers
+  // SWC minification is enabled by default in Next.js 16
+  
+  // Security headers with caching
   async headers() {
     return [
       {
@@ -57,12 +70,39 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Cache static assets
+      {
+        source: "/:path*\\.(js|css|woff|woff2|png|jpg|jpeg|gif|svg|ico|webp|avif)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache API responses with shorter TTL
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=10, stale-while-revalidate=60",
+          },
+        ],
+      },
     ];
   },
   
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "recharts"],
+    optimizePackageImports: ["lucide-react", "date-fns", "recharts", "@radix-ui/react-icons"],
+    // Enable partial prerendering for better performance
+    ppr: false, // Can enable when stable
+  },
+  
+  // Turbopack configuration (Next.js 16+ uses Turbopack by default)
+  turbopack: {
+    // Turbopack handles optimizations automatically
   },
 };
 

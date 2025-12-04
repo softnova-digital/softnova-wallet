@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -31,7 +32,7 @@ interface RecentExpensesProps {
   expenses: ExpenseWithCategory[];
 }
 
-export function RecentExpenses({ expenses }: RecentExpensesProps) {
+export const RecentExpenses = memo(function RecentExpenses({ expenses }: RecentExpensesProps) {
   if (expenses.length === 0) {
     return (
       <Card className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
@@ -141,4 +142,4 @@ export function RecentExpenses({ expenses }: RecentExpensesProps) {
       </CardContent>
     </Card>
   );
-}
+});

@@ -3,12 +3,16 @@ import { DM_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap", // Optimize font loading
+  preload: true,
+  fallback: ["system-ui", "arial"],
 });
 
 export const metadata: Metadata = {
@@ -46,14 +50,16 @@ export default function RootLayout({
       signUpUrl={undefined}
       signUpFallbackRedirectUrl={undefined}
     >
-      <ReactQueryProvider>
-        <html lang="en" className="dark">
-          <body className={`${dmSans.variable} font-sans antialiased`}>
-            {children}
-            <Toaster richColors position="top-right" />
-          </body>
-        </html>
-      </ReactQueryProvider>
+      <ErrorBoundary>
+        <ReactQueryProvider>
+          <html lang="en" className="dark">
+            <body className={`${dmSans.variable} font-sans antialiased`}>
+              {children}
+              <Toaster richColors position="top-right" />
+            </body>
+          </html>
+        </ReactQueryProvider>
+      </ErrorBoundary>
     </ClerkProvider>
   );
 }
