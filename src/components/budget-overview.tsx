@@ -12,7 +12,7 @@ interface Budget {
   amount: number;
   period: string;
   spent?: number;
-  category: {
+  category?: {
     name: string;
     color: string;
   } | null;
