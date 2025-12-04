@@ -108,7 +108,7 @@ export async function PATCH(
         // Validate Cloudinary configuration
         if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
           // Delete the old image from Cloudinary
-          await new Promise<void>((resolve, reject) => {
+          await new Promise<void>((resolve) => {
             cloudinary.uploader.destroy(
               existingExpense.receiptPublicId!,
               { resource_type: "auto" }, // Handle both images and PDFs

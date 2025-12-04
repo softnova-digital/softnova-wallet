@@ -84,7 +84,7 @@ export function ExpenseForm({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       amount: expense?.amount?.toString() || "",
-      description: expense?.description || "",
+      description: expense?.description || undefined, // Handle null/undefined from database
       date: expense?.date ? new Date(expense.date) : new Date(),
       payee: (expense?.payee as ExpenseFormValues["payee"]) || PARTNERS[0],
       categoryId: expense?.categoryId || "",
@@ -139,6 +139,7 @@ export function ExpenseForm({
       ...data,
       amount: parseFloat(data.amount),
       date: data.date.toISOString(),
+      description: data.description?.trim() || undefined, // Convert empty strings to undefined
       receiptUrl,
       receiptPublicId,
     };

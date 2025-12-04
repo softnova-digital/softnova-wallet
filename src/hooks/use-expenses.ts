@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import type { Expense, Category, Label } from "@/types";
+import type { Expense } from "@/types";
 
 interface ExpensesResponse {
   expenses: Expense[];
@@ -43,12 +43,13 @@ export function useExpenses() {
 
 interface CreateExpenseData {
   amount: number;
-  description: string;
+  description?: string; // Description is now optional
   date: string;
   payee: string;
   categoryId: string;
   labelIds: string[];
   receiptUrl?: string;
+  receiptPublicId?: string;
 }
 
 interface UpdateExpenseData extends CreateExpenseData {

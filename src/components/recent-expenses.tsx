@@ -10,7 +10,7 @@ import { ArrowRight } from "lucide-react";
 interface ExpenseWithCategory {
   id: string;
   amount: number;
-  description: string;
+  description: string | null; // Description is now optional
   date: Date;
   payee: string;
   userName: string;
@@ -84,7 +84,9 @@ export function RecentExpenses({ expenses }: RecentExpensesProps) {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate text-sm sm:text-base">{expense.description}</p>
+                    <p className="font-medium truncate text-sm sm:text-base">
+                      {expense.description || "No description"}
+                    </p>
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground mt-0.5">
                       <span className="truncate max-w-[80px] sm:max-w-none">{expense.payee}</span>
                       <span className="hidden sm:inline">•</span>

@@ -29,7 +29,7 @@ export interface Label {
 export interface Expense {
   id: string;
   amount: number;
-  description: string;
+  description: string | null; // Description is now optional
   date: Date;
   payee: string;
   categoryId: string;
@@ -70,7 +70,7 @@ export interface Budget {
 
 export interface ExpenseFormData {
   amount: number;
-  description: string;
+  description?: string; // Description is now optional
   date: Date;
   payee: string;
   categoryId: string;
