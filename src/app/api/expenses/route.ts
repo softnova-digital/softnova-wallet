@@ -6,7 +6,7 @@ import { PARTNERS } from "@/lib/constants";
 
 const createExpenseSchema = z.object({
   amount: z.number().positive(),
-  description: z.string().min(1),
+  description: z.string().optional(), // Description is now optional
   date: z.string(),
   payee: z.enum(PARTNERS),
   categoryId: z.string().min(1),
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     const expense = await db.expense.create({
       data: {
         amount: validatedData.amount,
-        description: validatedData.description,
+        description: validatedData.description || null, // Description is optional, use null if not provided
         date: new Date(validatedData.date),
         payee: validatedData.payee,
         categoryId: validatedData.categoryId,

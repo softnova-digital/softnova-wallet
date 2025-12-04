@@ -42,7 +42,7 @@ model Label {
 model Expense {
   id              String         @id @default(cuid())
   amount          Float
-  description     String
+  description     String?        // Description is now optional
   date            DateTime
   payee           String
   categoryId      String

@@ -42,7 +42,7 @@ import { toast } from "sonner";
 
 const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(), // Description is now optional
   date: z.date({ message: "Date is required" }),
   payee: z.enum(PARTNERS, {
     message: "Please select who paid for this expense",

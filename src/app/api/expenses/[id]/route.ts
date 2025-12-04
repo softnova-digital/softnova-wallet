@@ -3,6 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { PARTNERS } from "@/lib/constants";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configure Cloudinary using environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const updateExpenseSchema = z.object({
   amount: z.number().positive().optional(),
@@ -88,6 +96,41 @@ export async function PATCH(
       });
     }
 
+    // Delete old receipt from Cloudinary if receipt is being removed or replaced
+    const isRemovingReceipt = validatedData.receiptUrl === null || validatedData.receiptPublicId === null;
+    const isReplacingReceipt = validatedData.receiptPublicId !== undefined && 
+                                validatedData.receiptPublicId !== null && 
+                                existingExpense.receiptPublicId &&
+                                validatedData.receiptPublicId !== existingExpense.receiptPublicId;
+
+    if ((isRemovingReceipt || isReplacingReceipt) && existingExpense.receiptPublicId) {
+      try {
+        // Validate Cloudinary configuration
+        if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+          // Delete the old image from Cloudinary
+          await new Promise<void>((resolve, reject) => {
+            cloudinary.uploader.destroy(
+              existingExpense.receiptPublicId!,
+              { resource_type: "auto" }, // Handle both images and PDFs
+              (error, result) => {
+                if (error) {
+                  console.error("Error deleting old image from Cloudinary:", error);
+                  // Don't fail the update if Cloudinary deletion fails
+                  resolve(); // Continue with database update
+                } else {
+                  console.log("Successfully deleted old image from Cloudinary:", result);
+                  resolve();
+                }
+              }
+            );
+          });
+        }
+      } catch (cloudinaryError) {
+        // Log error but continue with database update
+        console.error("Error during Cloudinary deletion during update:", cloudinaryError);
+      }
+    }
+
     const expense = await db.expense.update({
       where: { id },
       data: {
@@ -153,13 +196,68 @@ export async function DELETE(
       return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
 
+    // Delete associated receipt from Cloudinary if it exists
+    if (expense.receiptPublicId) {
+      // Validate Cloudinary configuration
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error("❌ Cloudinary configuration missing - cannot delete image. Expense will still be deleted from database.");
+        console.error("Missing env vars:", {
+          hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+          hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+          hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+        });
+      } else {
+        try {
+          console.log(`🗑️  Attempting to delete Cloudinary image with public_id: ${expense.receiptPublicId}`);
+          
+          // Delete the image from Cloudinary using the stored public_id
+          // The public_id includes the folder path (e.g., "expense-receipts/expense-userId-timestamp")
+          const deleteResult = await new Promise<{ result: string }>((resolve, reject) => {
+            cloudinary.uploader.destroy(
+              expense.receiptPublicId!,
+              { resource_type: "auto" }, // Handle both images and PDFs
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result as { result: string });
+                }
+              }
+            );
+          });
+
+          if (deleteResult.result === "ok" || deleteResult.result === "not found") {
+            console.log(`✅ Successfully deleted Cloudinary image: ${expense.receiptPublicId} (result: ${deleteResult.result})`);
+          } else {
+            console.warn(`⚠️  Cloudinary deletion returned unexpected result: ${deleteResult.result} for public_id: ${expense.receiptPublicId}`);
+          }
+        } catch (cloudinaryError) {
+          // Log detailed error information
+          console.error("❌ Error deleting image from Cloudinary:", {
+            publicId: expense.receiptPublicId,
+            error: cloudinaryError instanceof Error ? cloudinaryError.message : String(cloudinaryError),
+            stack: cloudinaryError instanceof Error ? cloudinaryError.stack : undefined,
+          });
+          // Continue with database deletion even if Cloudinary deletion fails
+          // The image might have already been deleted or the public_id might be invalid
+        }
+      }
+    } else {
+      console.log("ℹ️  No receiptPublicId found for expense, skipping Cloudinary deletion");
+    }
+
+    // Delete the expense from the database
     await db.expense.delete({
       where: { id },
     });
 
+    console.log(`✅ Successfully deleted expense ${id} from database`);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting expense:", error);
+    console.error("❌ Error deleting expense:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: "Failed to delete expense" },
       { status: 500 }
