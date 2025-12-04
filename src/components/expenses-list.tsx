@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Edit, Trash2, Receipt, MoreHorizontal, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
 
 import {
   Table,
@@ -50,62 +48,20 @@ interface ExpensesListProps {
 }
 
 export function ExpensesList({ categories, labels }: ExpensesListProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading, error } = useExpenses();
+  const deleteExpenseMutation = useDeleteExpense();
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
 
-  const fetchExpenses = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      const categoryId = searchParams.get("categoryId");
-      const payee = searchParams.get("payee");
-      const startDate = searchParams.get("startDate");
-      const endDate = searchParams.get("endDate");
-      const search = searchParams.get("search");
+  const expenses = data?.expenses || [];
 
-      if (categoryId && categoryId !== "all") params.set("categoryId", categoryId);
-      if (payee && payee !== "all") params.set("payee", payee);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-      if (search) params.set("search", search);
-
-      const response = await fetch(`/api/expenses?${params.toString()}`);
-      const data = await response.json();
-      setExpenses(data.expenses || []);
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
-      toast.error("Failed to load expenses");
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
-
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteExpense) return;
-
-    try {
-      const response = await fetch(`/api/expenses/${deleteExpense.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      toast.success("Expense deleted");
-      setDeleteExpense(null);
-      router.refresh();
-      fetchExpenses();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete expense");
-    }
+    deleteExpenseMutation.mutate(deleteExpense.id, {
+      onSuccess: () => {
+        setDeleteExpense(null);
+      },
+    });
   }
 
   if (loading) {
@@ -116,6 +72,17 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span>Loading expenses...</span>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="animate-fade-in-up">
+        <CardContent className="p-8 text-center text-muted-foreground">
+          <p className="text-lg font-medium text-destructive">Failed to load expenses</p>
+          <p className="text-sm mt-1">Please try again later</p>
         </CardContent>
       </Card>
     );
@@ -368,7 +335,6 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
               expense={editExpense}
               onSuccess={() => {
                 setEditExpense(null);
-                fetchExpenses();
               }}
             />
           )}

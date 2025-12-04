@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { toast } from "sonner";
+import { useCreateIncome, useUpdateIncome } from "@/hooks/use-incomes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,8 +52,8 @@ interface IncomeFormProps {
 }
 
 export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createIncome = useCreateIncome();
+  const updateIncome = useUpdateIncome();
 
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeSchema),
@@ -69,32 +67,27 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
   });
 
   async function onSubmit(data: IncomeFormValues) {
-    setIsSubmitting(true);
-    try {
-      const url = income ? `/api/incomes/${income.id}` : "/api/incomes";
-      const method = income ? "PUT" : "POST";
+    const incomeData = {
+      ...data,
+      amount: parseFloat(data.amount),
+      date: data.date.toISOString(),
+    };
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          amount: parseFloat(data.amount),
-        }),
+    if (income) {
+      updateIncome.mutate(
+        { ...incomeData, id: income.id },
+        {
+          onSuccess: () => {
+            onSuccess?.();
+          },
+        }
+      );
+    } else {
+      createIncome.mutate(incomeData, {
+        onSuccess: () => {
+          onSuccess?.();
+        },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save income");
-      }
-
-      toast.success(income ? "Income updated" : "Income added");
-      router.refresh();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save income");
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -238,10 +231,14 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
           <Button 
             type="submit" 
-            disabled={isSubmitting} 
+            disabled={createIncome.isPending || updateIncome.isPending} 
             className="btn-press w-full sm:w-auto min-h-[44px]"
           >
-            {isSubmitting ? "Saving..." : income ? "Update Income" : "Add Income"}
+            {createIncome.isPending || updateIncome.isPending
+              ? "Saving..."
+              : income
+              ? "Update Income"
+              : "Add Income"}
           </Button>
         </div>
       </form>

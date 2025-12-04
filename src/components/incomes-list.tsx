@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Edit, Trash2, Wallet, MoreHorizontal, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useIncomes, useDeleteIncome } from "@/hooks/use-incomes";
 
 import {
   Table,
@@ -49,60 +47,20 @@ interface IncomesListProps {
 }
 
 export function IncomesList({ categories }: IncomesListProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [incomes, setIncomes] = useState<Income[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading, error } = useIncomes();
+  const deleteIncomeMutation = useDeleteIncome();
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteIncome, setDeleteIncome] = useState<Income | null>(null);
 
-  const fetchIncomes = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      const categoryId = searchParams.get("categoryId");
-      const startDate = searchParams.get("startDate");
-      const endDate = searchParams.get("endDate");
-      const search = searchParams.get("search");
+  const incomes = data?.incomes || [];
 
-      if (categoryId && categoryId !== "all") params.set("categoryId", categoryId);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-      if (search) params.set("search", search);
-
-      const response = await fetch(`/api/incomes?${params.toString()}`);
-      const data = await response.json();
-      setIncomes(data.incomes || []);
-    } catch (error) {
-      console.error("Error fetching incomes:", error);
-      toast.error("Failed to load incomes");
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchIncomes();
-  }, [fetchIncomes]);
-
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteIncome) return;
-
-    try {
-      const response = await fetch(`/api/incomes/${deleteIncome.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      toast.success("Income deleted");
-      setDeleteIncome(null);
-      router.refresh();
-      fetchIncomes();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete income");
-    }
+    deleteIncomeMutation.mutate(deleteIncome.id, {
+      onSuccess: () => {
+        setDeleteIncome(null);
+      },
+    });
   }
 
   if (loading) {
@@ -113,6 +71,17 @@ export function IncomesList({ categories }: IncomesListProps) {
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span>Loading incomes...</span>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="animate-fade-in-up">
+        <CardContent className="p-8 text-center text-muted-foreground">
+          <p className="text-lg font-medium text-destructive">Failed to load incomes</p>
+          <p className="text-sm mt-1">Please try again later</p>
         </CardContent>
       </Card>
     );
@@ -299,7 +268,6 @@ export function IncomesList({ categories }: IncomesListProps) {
               income={editIncome}
               onSuccess={() => {
                 setEditIncome(null);
-                fetchIncomes();
               }}
             />
           )}

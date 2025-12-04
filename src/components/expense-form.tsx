@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
-import { toast } from "sonner";
+import { useCreateExpense, useUpdateExpense } from "@/hooks/use-expenses";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,8 +66,8 @@ export function ExpenseForm({
   expense,
   onSuccess,
 }: ExpenseFormProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const createExpense = useCreateExpense();
+  const updateExpense = useUpdateExpense();
   const [receiptUrl, setReceiptUrl] = useState<string | undefined>(
     expense?.receiptUrl || undefined
   );
@@ -89,34 +88,28 @@ export function ExpenseForm({
   const selectedLabels = form.watch("labelIds");
 
   async function onSubmit(data: ExpenseFormValues) {
-    setIsLoading(true);
-    try {
-      const url = expense ? `/api/expenses/${expense.id}` : "/api/expenses";
-      const method = expense ? "PATCH" : "POST";
+    const expenseData = {
+      ...data,
+      amount: parseFloat(data.amount),
+      date: data.date.toISOString(),
+      receiptUrl,
+    };
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          amount: parseFloat(data.amount),
-          date: data.date.toISOString(),
-          receiptUrl,
-        }),
+    if (expense) {
+      updateExpense.mutate(
+        { ...expenseData, id: expense.id },
+        {
+          onSuccess: () => {
+            onSuccess?.();
+          },
+        }
+      );
+    } else {
+      createExpense.mutate(expenseData, {
+        onSuccess: () => {
+          onSuccess?.();
+        },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save expense");
-      }
-
-      toast.success(expense ? "Expense updated" : "Expense created");
-      router.refresh();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong");
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -322,10 +315,14 @@ export function ExpenseForm({
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
           <Button 
             type="submit" 
-            disabled={isLoading}
+            disabled={createExpense.isPending || updateExpense.isPending}
             className="w-full sm:w-auto min-h-[44px]"
           >
-            {isLoading ? "Saving..." : expense ? "Update Expense" : "Add Expense"}
+            {createExpense.isPending || updateExpense.isPending
+              ? "Saving..."
+              : expense
+              ? "Update Expense"
+              : "Add Expense"}
           </Button>
         </div>
       </form>
