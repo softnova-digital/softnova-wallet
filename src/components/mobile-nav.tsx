@@ -46,7 +46,7 @@ export function MobileNav({ user }: MobileNavProps) {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
+      <SheetContent side="left" className="w-72 sm:w-80 p-0 flex flex-col">
         <SheetHeader className="border-b border-border px-4 py-4">
           <SheetTitle asChild>
             <Link href="/" className="flex items-center justify-center w-full" onClick={() => setOpen(false)}>
@@ -55,7 +55,7 @@ export function MobileNav({ user }: MobileNavProps) {
           </SheetTitle>
         </SheetHeader>
         
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {navItems.map((item, index) => {
             const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
             return (
@@ -64,16 +64,16 @@ export function MobileNav({ user }: MobileNavProps) {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 rounded-lg px-3 py-3.5 text-sm font-medium transition-all duration-200 min-h-[44px] touch-manipulation",
                   "animate-fade-in-up",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground hover:translate-x-1"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent"
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <item.icon className="h-5 w-5" />
-                {item.label}
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span>{item.label}</span>
               </Link>
             );
           })}

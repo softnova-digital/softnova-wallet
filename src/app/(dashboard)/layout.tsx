@@ -13,6 +13,7 @@ import {
 import { NavLink } from "@/components/nav-link";
 import { MobileNav } from "@/components/mobile-nav";
 import { Logo } from "@/components/logo";
+import { FloatingActionButton } from "@/components/floating-action-button";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -98,9 +99,12 @@ export default async function DashboardLayout({
       </header>
 
       {/* Main content */}
-      <main className="lg:ml-64 min-h-screen pt-16 md:pt-20 lg:pt-0 grid-background">
+      <main className="lg:ml-64 min-h-screen pt-16 md:pt-20 lg:pt-0 grid-background pb-20 lg:pb-0">
         <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">{children}</div>
       </main>
+
+      {/* Floating Action Button - Mobile Only */}
+      <FloatingActionButton />
     </div>
   );
 }

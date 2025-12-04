@@ -134,8 +134,8 @@ export function ExpenseForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="amount"
@@ -281,7 +281,7 @@ export function ExpenseForm({
               <Badge
                 key={label.id}
                 variant={selectedLabels.includes(label.id) ? "default" : "outline"}
-                className="cursor-pointer"
+                className="cursor-pointer min-h-[36px] px-3 py-1.5 text-sm touch-manipulation"
                 style={
                   selectedLabels.includes(label.id)
                     ? { backgroundColor: label.color }
@@ -319,8 +319,12 @@ export function ExpenseForm({
           )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full sm:w-auto min-h-[44px]"
+          >
             {isLoading ? "Saving..." : expense ? "Update Expense" : "Add Expense"}
           </Button>
         </div>

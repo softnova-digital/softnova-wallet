@@ -100,7 +100,7 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -235,8 +235,12 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="submit" disabled={isSubmitting} className="btn-press">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="btn-press w-full sm:w-auto min-h-[44px]"
+          >
             {isSubmitting ? "Saving..." : income ? "Update Income" : "Add Income"}
           </Button>
         </div>
