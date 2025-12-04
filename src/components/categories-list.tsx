@@ -37,11 +37,13 @@ import { getCategoryIcon } from "@/lib/category-icons";
 interface CategoryWithCount {
   id: string;
   name: string;
+  type: "EXPENSE" | "INCOME";
   icon: string;
   color: string;
   isDefault: boolean;
-  _count: {
-    expenses: number;
+  _count?: {
+    expenses?: number;
+    incomes?: number;
   };
 }
 
@@ -126,8 +128,10 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                     <div>
                       <h3 className="font-semibold">{category.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {category._count.expenses} expense
-                        {category._count.expenses !== 1 ? "s" : ""}
+                        {category.type === "EXPENSE" 
+                          ? `${category._count?.expenses || 0} expense${(category._count?.expenses || 0) !== 1 ? "s" : ""}`
+                          : `${category._count?.incomes || 0} income${(category._count?.incomes || 0) !== 1 ? "s" : ""}`
+                        }
                       </p>
                     </div>
                   </div>

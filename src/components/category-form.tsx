@@ -28,6 +28,7 @@ import { getCategoryIcon, availableIcons } from "@/lib/category-icons";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
+  type: z.enum(["EXPENSE", "INCOME"]),
   icon: z.string().min(1, "Icon is required"),
   color: z.string().min(1, "Color is required"),
 });
@@ -38,9 +39,11 @@ interface CategoryFormProps {
   category?: {
     id: string;
     name: string;
+    type: "EXPENSE" | "INCOME";
     icon: string;
     color: string;
   };
+  defaultType?: "EXPENSE" | "INCOME"; // Default type when creating new category
   onSuccess?: () => void;
 }
 
@@ -57,7 +60,7 @@ const colorOptions = [
   { name: "Indigo", value: "#3F51B5" },
 ];
 
-export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
+export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: CategoryFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,8 +68,9 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: category?.name || "",
-      icon: category?.icon || "folder",
-      color: category?.color || "#2ECC71",
+      type: category?.type || defaultType,
+      icon: category?.icon || (defaultType === "INCOME" ? "wallet" : "folder"),
+      color: category?.color || (defaultType === "INCOME" ? "#3498DB" : "#2ECC71"),
     },
   });
 
@@ -116,6 +120,33 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
                 <Input placeholder="Category name" {...field} />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!category}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="EXPENSE">Expense</SelectItem>
+                  <SelectItem value="INCOME">Income</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+              {category && (
+                <p className="text-xs text-muted-foreground">
+                  Category type cannot be changed after creation
+                </p>
+              )}
             </FormItem>
           )}
         />

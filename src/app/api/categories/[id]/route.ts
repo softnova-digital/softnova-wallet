@@ -5,6 +5,7 @@ import { z } from "zod";
 
 const updateCategorySchema = z.object({
   name: z.string().min(1).optional(),
+  type: z.enum(["EXPENSE", "INCOME"]).optional(),
   icon: z.string().min(1).optional(),
   color: z.string().min(1).optional(),
 });
@@ -25,7 +26,10 @@ export async function GET(
       where: { id },
       include: {
         _count: {
-          select: { expenses: true },
+          select: {
+            expenses: true,
+            incomes: true,
+          },
         },
       },
     });
@@ -94,16 +98,18 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Check if category has expenses
-    const expenseCount = await db.expense.count({
-      where: { categoryId: id },
-    });
+    // Check if category has expenses or incomes
+    const [expenseCount, incomeCount] = await Promise.all([
+      db.expense.count({ where: { categoryId: id } }),
+      db.income.count({ where: { categoryId: id } }),
+    ]);
 
-    if (expenseCount > 0) {
+    const totalCount = expenseCount + incomeCount;
+    if (totalCount > 0) {
       return NextResponse.json(
         {
           error: "Cannot delete category",
-          message: `This category has ${expenseCount} expense(s). Please reassign them before deleting.`,
+          message: `This category has ${totalCount} transaction(s). Please reassign them before deleting.`,
         },
         { status: 400 }
       );

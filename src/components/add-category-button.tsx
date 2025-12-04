@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { CategoryForm } from "@/components/category-form";
 
-export function AddCategoryButton() {
+interface AddCategoryButtonProps {
+  defaultType?: "EXPENSE" | "INCOME";
+}
+
+export function AddCategoryButton({ defaultType = "EXPENSE" }: AddCategoryButtonProps = {}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,9 +29,11 @@ export function AddCategoryButton() {
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>
+            Add New {defaultType === "INCOME" ? "Income" : "Expense"} Category
+          </DialogTitle>
         </DialogHeader>
-        <CategoryForm onSuccess={() => setOpen(false)} />
+        <CategoryForm defaultType={defaultType} onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

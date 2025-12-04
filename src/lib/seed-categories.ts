@@ -19,6 +19,7 @@ export async function seedCategories() {
       create: {
         id: category.name.toLowerCase().replace(/\//g, "-").replace(/\s+/g, "-"),
         name: category.name,
+        type: "EXPENSE", // All seeded categories are expense categories
         icon: category.icon,
         color: category.color,
         isDefault: true,

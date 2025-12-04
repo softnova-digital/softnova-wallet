@@ -44,6 +44,7 @@ export default async function BudgetsPage() {
       orderBy: [{ period: "asc" }],
     }),
     db.category.findMany({
+      where: { type: "EXPENSE" }, // Budgets are only for expenses
       orderBy: { name: "asc" },
     }),
   ]);

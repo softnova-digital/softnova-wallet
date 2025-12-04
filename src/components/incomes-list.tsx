@@ -40,10 +40,10 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { IncomeForm } from "@/components/income-form";
 import { getCategoryIcon } from "@/lib/category-icons";
-import type { IncomeCategory, Income } from "@/types";
+import type { Category, Income } from "@/types";
 
 interface IncomesListProps {
-  categories: IncomeCategory[];
+  categories: Category[]; // Now uses unified Category type
 }
 
 export function IncomesList({ categories }: IncomesListProps) {

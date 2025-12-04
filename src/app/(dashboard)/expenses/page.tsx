@@ -20,6 +20,7 @@ export default async function ExpensesPage() {
 
   const [categories, labels] = await Promise.all([
     db.category.findMany({
+      where: { type: "EXPENSE" },
       orderBy: { name: "asc" },
     }),
     db.label.findMany({

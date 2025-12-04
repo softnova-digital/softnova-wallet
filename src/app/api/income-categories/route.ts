@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+// This route is now a redirect to the unified categories API with type filter
+// Kept for backward compatibility
 export async function GET() {
   try {
     const { userId } = await auth();
@@ -10,7 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const categories = await db.incomeCategory.findMany({
+    // Fetch only income categories using the unified model
+    const categories = await db.category.findMany({
+      where: { type: "INCOME" },
       orderBy: { name: "asc" },
     });
 
@@ -42,9 +46,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const category = await db.incomeCategory.create({
+    // Create as INCOME type category
+    const category = await db.category.create({
       data: {
         name,
+        type: "INCOME",
         icon: icon || "wallet",
         color: color || "#3498DB",
       },
@@ -59,6 +65,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 
 

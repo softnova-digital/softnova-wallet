@@ -1,22 +1,22 @@
+export type CategoryType = "EXPENSE" | "INCOME";
+
 export interface Category {
   id: string;
   name: string;
+  type: CategoryType;
   icon: string;
   color: string;
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;
+  _count?: {
+    expenses?: number;
+    incomes?: number;
+  };
 }
 
-export interface IncomeCategory {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Keep IncomeCategory for backward compatibility, but it's now just an alias
+export type IncomeCategory = Category;
 
 export interface Label {
   id: string;
@@ -50,7 +50,7 @@ export interface Income {
   date: Date;
   source: string;
   categoryId: string;
-  category?: IncomeCategory;
+  category?: Category; // Now uses unified Category
   userId: string;
   userName: string;
   createdAt: Date;
@@ -89,10 +89,12 @@ export interface IncomeFormData {
 
 export interface CategoryFormData {
   name: string;
+  type: CategoryType;
   icon: string;
   color: string;
 }
 
+// Keep for backward compatibility
 export interface IncomeCategoryFormData {
   name: string;
   icon: string;

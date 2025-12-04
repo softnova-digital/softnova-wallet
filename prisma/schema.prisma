@@ -8,26 +8,25 @@ datasource db {
 }
 
 model Category {
-  id        String    @id @default(cuid())
+  id        String      @id @default(cuid())
   name      String
-  icon      String    @default("folder")
-  color     String    @default("#2ECC71")
-  isDefault Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  type      CategoryType @default(EXPENSE) // Unified: EXPENSE or INCOME
+  icon      String      @default("folder")
+  color     String      @default("#2ECC71")
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   expenses  Expense[]
+  incomes   Income[]
   budgets   Budget[]
+
+  @@index([type])
+  @@index([type, name])
 }
 
-model IncomeCategory {
-  id        String   @id @default(cuid())
-  name      String
-  icon      String   @default("wallet")
-  color     String   @default("#3498DB")
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  incomes   Income[]
+enum CategoryType {
+  EXPENSE
+  INCOME
 }
 
 model Label {
@@ -61,17 +60,17 @@ model Expense {
 }
 
 model Income {
-  id          String         @id @default(cuid())
+  id          String   @id @default(cuid())
   amount      Float
   description String
   date        DateTime
   source      String // Who paid you (client name, employer, etc.)
   categoryId  String
-  category    IncomeCategory @relation(fields: [categoryId], references: [id])
+  category    Category @relation(fields: [categoryId], references: [id])
   userId      String
   userName    String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([categoryId])

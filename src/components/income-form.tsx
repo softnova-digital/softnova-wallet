@@ -33,7 +33,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/category-icons";
-import type { IncomeCategory, Income } from "@/types";
+import type { Category, Income } from "@/types";
 
 const incomeSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
@@ -46,7 +46,7 @@ const incomeSchema = z.object({
 type IncomeFormValues = z.infer<typeof incomeSchema>;
 
 interface IncomeFormProps {
-  categories: IncomeCategory[];
+  categories: Category[]; // Now uses unified Category type
   income?: Income;
   onSuccess?: () => void;
 }

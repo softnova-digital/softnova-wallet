@@ -24,6 +24,7 @@ async function main() {
       create: {
         id,
         name: category.name,
+        type: "EXPENSE", // All seeded categories are expense categories
         icon: category.icon,
         color: category.color,
         isDefault: true,

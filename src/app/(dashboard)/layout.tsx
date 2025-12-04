@@ -7,7 +7,6 @@ import {
   Receipt,
   Wallet,
   PiggyBank,
-  Tags,
   Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/nav-link";
@@ -20,7 +19,6 @@ const navItems = [
   { href: "/expenses", label: "Expenses", icon: Receipt },
   { href: "/incomes", label: "Incomes", icon: Wallet },
   { href: "/budgets", label: "Budgets", icon: PiggyBank },
-  { href: "/categories", label: "Categories", icon: Tags },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

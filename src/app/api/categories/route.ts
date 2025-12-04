@@ -2,25 +2,37 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { CategoryType } from "@prisma/client";
 
 const createCategorySchema = z.object({
   name: z.string().min(1, "Name is required"),
+  type: z.enum(["EXPENSE", "INCOME"]),
   icon: z.string().min(1),
   color: z.string().min(1),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get type filter from query params
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type") as CategoryType | null;
+
+    const where = type ? { type } : {};
+
     const categories = await db.category.findMany({
+      where,
       orderBy: { name: "asc" },
       include: {
         _count: {
-          select: { expenses: true },
+          select: {
+            expenses: type === "EXPENSE" || !type,
+            incomes: type === "INCOME" || !type,
+          },
         },
       },
     });
@@ -48,6 +60,7 @@ export async function POST(request: NextRequest) {
     const category = await db.category.create({
       data: {
         name: validatedData.name,
+        type: validatedData.type,
         icon: validatedData.icon,
         color: validatedData.color,
         isDefault: false,

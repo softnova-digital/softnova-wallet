@@ -166,8 +166,10 @@ export default async function DashboardPage() {
         amount: true,
       },
     }),
-    // Get all categories
-    db.category.findMany(),
+    // Get all expense categories (for budgets and charts)
+    db.category.findMany({
+      where: { type: "EXPENSE" },
+    }),
   ]);
 
   // Calculate spent amount for each budget - optimized to avoid N+1 queries

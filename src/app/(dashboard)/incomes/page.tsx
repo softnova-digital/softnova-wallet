@@ -18,23 +18,24 @@ export default async function IncomesPage() {
     redirect("/sign-in");
   }
 
-  // Check if categories exist and create defaults if needed - optimized
-  const existingCategory = await db.incomeCategory.findFirst({
+  // Check if income categories exist and create defaults if needed - optimized
+  const existingCategory = await db.category.findFirst({
+    where: { type: "INCOME" },
     orderBy: { name: "asc" },
   });
 
   if (!existingCategory) {
-    // Create default categories in a single transaction
+    // Create default income categories in a single transaction
     const defaultCategories = [
-      { name: "Salary", icon: "briefcase", color: "#3498DB" },
-      { name: "Freelance", icon: "laptop", color: "#9B59B6" },
-      { name: "Investments", icon: "trending-up", color: "#27AE60" },
-      { name: "Sales", icon: "shopping-cart", color: "#E67E22" },
-      { name: "Rental", icon: "home", color: "#1ABC9C" },
-      { name: "Other", icon: "wallet", color: "#95A5A6" },
+      { name: "Salary", icon: "briefcase", color: "#3498DB", type: "INCOME" as const },
+      { name: "Freelance", icon: "laptop", color: "#9B59B6", type: "INCOME" as const },
+      { name: "Investments", icon: "trending-up", color: "#27AE60", type: "INCOME" as const },
+      { name: "Sales", icon: "shopping-cart", color: "#E67E22", type: "INCOME" as const },
+      { name: "Rental", icon: "home", color: "#1ABC9C", type: "INCOME" as const },
+      { name: "Other", icon: "wallet", color: "#95A5A6", type: "INCOME" as const },
     ];
 
-    await db.incomeCategory.createMany({
+    await db.category.createMany({
       data: defaultCategories.map((cat) => ({
         ...cat,
         isDefault: true,
@@ -43,8 +44,9 @@ export default async function IncomesPage() {
     });
   }
 
-  // Fetch all categories (now guaranteed to exist)
-  const categories = await db.incomeCategory.findMany({
+  // Fetch all INCOME type categories (now guaranteed to exist)
+  const categories = await db.category.findMany({
+    where: { type: "INCOME" },
     orderBy: { name: "asc" },
   });
 

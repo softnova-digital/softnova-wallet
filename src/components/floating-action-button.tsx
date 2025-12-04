@@ -12,7 +12,7 @@ import {
 import { ExpenseForm } from "@/components/expense-form";
 import { IncomeForm } from "@/components/income-form";
 import { cn } from "@/lib/utils";
-import type { Category, Label, IncomeCategory } from "@/types";
+import type { Category, Label } from "@/types";
 
 export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +20,7 @@ export function FloatingActionButton() {
     null
   );
   const [categories, setCategories] = useState<Category[]>([]);
-  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>(
+  const [incomeCategories, setIncomeCategories] = useState<Category[]>(
     []
   );
   const [labels, setLabels] = useState<Label[]>([]);
@@ -35,22 +35,22 @@ export function FloatingActionButton() {
   async function fetchData() {
     setIsLoading(true);
     try {
-      const [categoriesRes, incomeCategoriesRes, labelsRes] = await Promise.all(
+      const [expenseCategoriesRes, incomeCategoriesRes, labelsRes] = await Promise.all(
         [
-          fetch("/api/categories"),
-          fetch("/api/income-categories"),
+          fetch("/api/categories?type=EXPENSE"),
+          fetch("/api/categories?type=INCOME"),
           fetch("/api/labels"),
         ]
       );
 
-      if (categoriesRes.ok) {
-        const cats = await categoriesRes.json();
+      if (expenseCategoriesRes.ok) {
+        const cats = await expenseCategoriesRes.json();
         setCategories(cats);
       }
 
       if (incomeCategoriesRes.ok) {
-        const data = await incomeCategoriesRes.json();
-        setIncomeCategories(data.categories || data);
+        const cats = await incomeCategoriesRes.json();
+        setIncomeCategories(cats);
       }
 
       if (labelsRes.ok) {

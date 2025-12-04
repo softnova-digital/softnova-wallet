@@ -11,10 +11,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { IncomeForm } from "@/components/income-form";
-import type { IncomeCategory } from "@/types";
+import type { Category } from "@/types";
 
 interface AddIncomeButtonProps {
-  categories: IncomeCategory[];
+  categories: Category[]; // Now uses unified Category type
 }
 
 export function AddIncomeButton({ categories }: AddIncomeButtonProps) {

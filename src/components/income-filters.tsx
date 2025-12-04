@@ -27,12 +27,12 @@ import {
 } from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type { IncomeCategory } from "@/types";
+import type { Category } from "@/types";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { Badge } from "@/components/ui/badge";
 
 interface IncomeFiltersProps {
-  categories: IncomeCategory[];
+  categories: Category[]; // Now uses unified Category type
 }
 
 export function IncomeFilters({ categories }: IncomeFiltersProps) {

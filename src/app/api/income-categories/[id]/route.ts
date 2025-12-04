@@ -15,8 +15,8 @@ export async function GET(
 
     const { id } = await params;
 
-    const category = await db.incomeCategory.findUnique({
-      where: { id },
+    const category = await db.category.findUnique({
+      where: { id, type: "INCOME" },
     });
 
     if (!category) {
@@ -48,8 +48,8 @@ export async function PUT(
     const body = await request.json();
     const { name, icon, color } = body;
 
-    const category = await db.incomeCategory.update({
-      where: { id },
+    const category = await db.category.update({
+      where: { id, type: "INCOME" },
       data: {
         name,
         icon,
@@ -92,7 +92,7 @@ export async function DELETE(
       );
     }
 
-    await db.incomeCategory.delete({
+    await db.category.delete({
       where: { id },
     });
 
@@ -105,6 +105,7 @@ export async function DELETE(
     );
   }
 }
+
 
 
 
