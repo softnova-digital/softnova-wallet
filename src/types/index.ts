@@ -36,6 +36,7 @@ export interface Expense {
   category?: Category;
   labels?: { label: Label }[];
   receiptUrl?: string | null;
+  receiptPublicId?: string | null;
   userId: string;
   userName: string;
   createdAt: Date;
@@ -75,6 +76,7 @@ export interface ExpenseFormData {
   categoryId: string;
   labelIds: string[];
   receiptUrl?: string;
+  receiptPublicId?: string;
 }
 
 export interface IncomeFormData {

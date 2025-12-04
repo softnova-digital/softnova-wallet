@@ -1,14 +1,27 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configure Cloudinary using environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Validate Cloudinary configuration
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json(
+        { error: "Cloudinary configuration is missing" },
+        { status: 500 }
+      );
     }
 
     const formData = await request.formData();
@@ -35,30 +48,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
+    // Convert buffer to base64 data URI for Cloudinary
+    const base64String = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-    // Generate unique filename (sanitize extension)
-    const timestamp = Date.now();
-    const originalExtension = file.name.split(".").pop()?.toLowerCase() || "";
-    const validExtensions = ["jpg", "jpeg", "png", "gif", "pdf"];
-    const extension = validExtensions.includes(originalExtension) 
-      ? originalExtension 
-      : "bin";
-    const filename = `${userId}-${timestamp}.${extension}`;
-    const filepath = join(uploadsDir, filename);
+    // Upload to Cloudinary
+    const uploadResult = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
+      cloudinary.uploader.upload(
+        base64String,
+        {
+          folder: "expense-receipts", // Organize receipts in a folder
+          resource_type: "auto", // Automatically detect image or PDF
+          public_id: `expense-${userId}-${Date.now()}`, // Unique identifier
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else if (!result || !result.secure_url || !result.public_id) {
+            reject(new Error("Invalid upload result"));
+          } else {
+            resolve({
+              secure_url: result.secure_url,
+              public_id: result.public_id,
+            });
+          }
+        }
+      );
+    });
 
-    await writeFile(filepath, buffer);
-
-    const url = `/uploads/${filename}`;
-
-    return NextResponse.json({ url });
+    return NextResponse.json({
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+    });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(

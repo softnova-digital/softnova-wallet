@@ -38,6 +38,7 @@ import type { Category, Label, Expense } from "@/types";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { UploadButton } from "@/components/upload-button";
 import { PARTNERS } from "@/lib/constants";
+import { toast } from "sonner";
 
 const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
@@ -49,6 +50,7 @@ const expenseSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   labelIds: z.array(z.string()),
   receiptUrl: z.string().optional(),
+  receiptPublicId: z.string().optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -68,8 +70,14 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
-  const [receiptUrl, setReceiptUrl] = useState<string | undefined>(
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  // For existing receipts when editing
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | undefined>(
     expense?.receiptUrl || undefined
+  );
+  const [existingReceiptPublicId, setExistingReceiptPublicId] = useState<string | undefined>(
+    expense?.receiptPublicId || undefined
   );
 
   const form = useForm<ExpenseFormValues>({
@@ -82,17 +90,57 @@ export function ExpenseForm({
       categoryId: expense?.categoryId || "",
       labelIds: expense?.labels?.map((l) => l.label.id) || [],
       receiptUrl: expense?.receiptUrl || undefined,
+      receiptPublicId: expense?.receiptPublicId || undefined,
     },
   });
 
   const selectedLabels = form.watch("labelIds");
 
   async function onSubmit(data: ExpenseFormValues) {
+    let receiptUrl = existingReceiptUrl;
+    let receiptPublicId = existingReceiptPublicId;
+
+    // Upload new file to Cloudinary if a file was selected
+    if (selectedFile) {
+      setIsUploadingReceipt(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: "Upload failed" }));
+          throw new Error(errorData.error || "Upload failed");
+        }
+
+        const uploadData = await response.json();
+        receiptUrl = uploadData.url;
+        receiptPublicId = uploadData.publicId;
+        toast.success("Receipt uploaded successfully");
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error(error instanceof Error ? error.message : "Failed to upload receipt");
+        setIsUploadingReceipt(false);
+        return; // Prevent form submission if upload fails
+      } finally {
+        setIsUploadingReceipt(false);
+      }
+    } else if (!existingReceiptUrl) {
+      // If no file selected and no existing receipt, clear receipt fields
+      receiptUrl = undefined;
+      receiptPublicId = undefined;
+    }
+
     const expenseData = {
       ...data,
       amount: parseFloat(data.amount),
       date: data.date.toISOString(),
       receiptUrl,
+      receiptPublicId,
     };
 
     if (expense) {
@@ -295,30 +343,64 @@ export function ExpenseForm({
 
         <div className="space-y-2">
           <FormLabel>Receipt</FormLabel>
-          {receiptUrl ? (
+          {selectedFile ? (
             <div className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1 truncate text-sm">{receiptUrl}</div>
+              <div className="flex-1 truncate text-sm">
+                <span className="text-muted-foreground">Selected: </span>
+                <span className="font-medium">{selectedFile.name}</span>
+                <span className="text-muted-foreground text-xs ml-2">
+                  ({(selectedFile.size / 1024).toFixed(1)} KB)
+                </span>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setReceiptUrl(undefined)}
+                onClick={() => setSelectedFile(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : existingReceiptUrl ? (
+            <div className="flex items-center gap-2 p-3 border rounded-lg">
+              <div className="flex-1 truncate text-sm">
+                <a
+                  href={existingReceiptUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  View Current Receipt
+                </a>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setExistingReceiptUrl(undefined);
+                  setExistingReceiptPublicId(undefined);
+                  // Allow user to select a new file after removing existing one
+                }}
+                title="Remove receipt"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <UploadButton onUploadComplete={(url) => setReceiptUrl(url)} />
+            <UploadButton onFileSelect={(file) => setSelectedFile(file)} />
           )}
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
           <Button 
             type="submit" 
-            disabled={createExpense.isPending || updateExpense.isPending}
+            disabled={createExpense.isPending || updateExpense.isPending || isUploadingReceipt}
             className="w-full sm:w-auto min-h-[44px]"
           >
-            {createExpense.isPending || updateExpense.isPending
+            {isUploadingReceipt
+              ? "Uploading Receipt..."
+              : createExpense.isPending || updateExpense.isPending
               ? "Saving..."
               : expense
               ? "Update Expense"

@@ -40,19 +40,20 @@ model Label {
 }
 
 model Expense {
-  id          String         @id @default(cuid())
-  amount      Float
-  description String
-  date        DateTime
-  payee       String
-  categoryId  String
-  category    Category       @relation(fields: [categoryId], references: [id])
-  labels      ExpenseLabel[]
-  receiptUrl  String?
-  userId      String
-  userName    String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id              String         @id @default(cuid())
+  amount          Float
+  description     String
+  date            DateTime
+  payee           String
+  categoryId      String
+  category        Category       @relation(fields: [categoryId], references: [id])
+  labels          ExpenseLabel[]
+  receiptUrl      String?
+  receiptPublicId String?
+  userId          String
+  userName        String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([userId])
   @@index([categoryId])

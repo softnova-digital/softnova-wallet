@@ -12,6 +12,7 @@ const createExpenseSchema = z.object({
   categoryId: z.string().min(1),
   labelIds: z.array(z.string()).optional(),
   receiptUrl: z.string().optional(),
+  receiptPublicId: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
         payee: validatedData.payee,
         categoryId: validatedData.categoryId,
         receiptUrl: validatedData.receiptUrl,
+        receiptPublicId: validatedData.receiptPublicId,
         userId,
         userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.emailAddresses[0]?.emailAddress || "Unknown",
         labels: validatedData.labelIds?.length

@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface UploadButtonProps {
-  onUploadComplete: (url: string) => void;
+  onFileSelect: (file: File) => void;
 }
 
-export function UploadButton({ onUploadComplete }: UploadButtonProps) {
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+export function UploadButton({ onFileSelect }: UploadButtonProps) {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -29,29 +26,11 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const data = await response.json();
-      onUploadComplete(data.url);
-      toast.success("Receipt uploaded successfully");
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload receipt");
-    } finally {
-      setIsUploading(false);
-    }
+    // Store the file locally - will be uploaded on form submission
+    onFileSelect(file);
+    
+    // Reset the input so the same file can be selected again if needed
+    e.target.value = "";
   };
 
   return (
@@ -61,27 +40,16 @@ export function UploadButton({ onUploadComplete }: UploadButtonProps) {
         id="receipt-upload"
         className="hidden"
         accept="image/*,.pdf"
-        onChange={handleUpload}
-        disabled={isUploading}
+        onChange={handleFileSelect}
       />
       <Button
         type="button"
         variant="outline"
         onClick={() => document.getElementById("receipt-upload")?.click()}
-        disabled={isUploading}
         className="w-full"
       >
-        {isUploading ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Receipt
-          </>
-        )}
+        <Upload className="h-4 w-4 mr-2" />
+        Select Receipt
       </Button>
     </div>
   );

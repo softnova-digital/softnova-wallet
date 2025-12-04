@@ -12,6 +12,7 @@ const updateExpenseSchema = z.object({
   categoryId: z.string().min(1).optional(),
   labelIds: z.array(z.string()).optional(),
   receiptUrl: z.string().optional().nullable(),
+  receiptPublicId: z.string().optional().nullable(),
 });
 
 export async function GET(
@@ -96,6 +97,7 @@ export async function PATCH(
         ...(validatedData.payee !== undefined && { payee: validatedData.payee }),
         ...(validatedData.categoryId !== undefined && { categoryId: validatedData.categoryId }),
         ...(validatedData.receiptUrl !== undefined && { receiptUrl: validatedData.receiptUrl }),
+        ...(validatedData.receiptPublicId !== undefined && { receiptPublicId: validatedData.receiptPublicId }),
         ...(validatedData.labelIds?.length && {
           labels: {
             create: validatedData.labelIds.map((labelId) => ({
