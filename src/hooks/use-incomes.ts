@@ -30,12 +30,17 @@ export function useIncomes() {
       if (endDate) params.set("endDate", endDate);
       if (search) params.set("search", search);
 
-      const response = await fetch(`/api/incomes?${params.toString()}`);
+      const response = await fetch(`/api/incomes?${params.toString()}`, {
+        cache: 'no-store'
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch incomes");
       }
       return response.json();
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -69,6 +74,7 @@ export function useCreateIncome() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income added");
@@ -98,6 +104,7 @@ export function useUpdateIncome() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income updated");
@@ -124,6 +131,7 @@ export function useDeleteIncome() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["incomes"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income deleted");

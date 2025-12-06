@@ -32,12 +32,17 @@ export function useExpenses() {
       if (endDate) params.set("endDate", endDate);
       if (search) params.set("search", search);
 
-      const response = await fetch(`/api/expenses?${params.toString()}`);
+      const response = await fetch(`/api/expenses?${params.toString()}`, {
+        cache: 'no-store' // Ensure fresh data from server
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch expenses");
       }
       return response.json();
     },
+    staleTime: 0, // Always consider data stale for expenses to ensure fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -74,7 +79,7 @@ export function useCreateExpense() {
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate all expense-related queries
+      queryClient.removeQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Expense created");
@@ -104,6 +109,7 @@ export function useUpdateExpense() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Expense updated");
@@ -130,6 +136,7 @@ export function useDeleteExpense() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Expense deleted");

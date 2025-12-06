@@ -13,7 +13,7 @@ export function ReactQueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30 * 1000, // 30 seconds - balance between freshness and performance
+            staleTime: 1000, // 1 second - balance between updates and performance
             gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
             refetchOnWindowFocus: false, // Prevent unnecessary refetches
             refetchOnMount: true, // Refetch on mount for fresh data
@@ -22,7 +22,7 @@ export function ReactQueryProvider({
             retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
           },
           mutations: {
-            retry: 1,
+            retry: 0, // Don't retry mutations to avoid duplicate creates
             retryDelay: 1000,
           },
         },
