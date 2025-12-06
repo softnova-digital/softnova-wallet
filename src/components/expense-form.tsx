@@ -144,21 +144,17 @@ export function ExpenseForm({
       receiptPublicId,
     };
 
-    if (expense) {
-      updateExpense.mutate(
-        { ...expenseData, id: expense.id },
-        {
-          onSuccess: () => {
-            onSuccess?.();
-          },
-        }
-      );
-    } else {
-      createExpense.mutate(expenseData, {
-        onSuccess: () => {
-          onSuccess?.();
-        },
-      });
+    try {
+      if (expense) {
+        await updateExpense.mutateAsync({ ...expenseData, id: expense.id });
+      } else {
+        await createExpense.mutateAsync(expenseData);
+      }
+      // Dialog closes AFTER refetch completes
+      onSuccess?.();
+    } catch (error) {
+      // Error already handled by mutation onError
+      console.error(error);
     }
   }
 

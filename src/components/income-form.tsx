@@ -73,21 +73,16 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
       date: data.date.toISOString(),
     };
 
-    if (income) {
-      updateIncome.mutate(
-        { ...incomeData, id: income.id },
-        {
-          onSuccess: () => {
-            onSuccess?.();
-          },
-        }
-      );
-    } else {
-      createIncome.mutate(incomeData, {
-        onSuccess: () => {
-          onSuccess?.();
-        },
-      });
+    try {
+      if (income) {
+        await updateIncome.mutateAsync({ ...incomeData, id: income.id });
+      } else {
+        await createIncome.mutateAsync(incomeData);
+      }
+      // Dialog closes AFTER refetch completes
+      onSuccess?.();
+    } catch (error) {
+      console.error(error);
     }
   }
 

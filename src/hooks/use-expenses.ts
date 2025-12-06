@@ -78,10 +78,15 @@ export function useCreateExpense() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      // Invalidate first to mark as stale, then refetch
+      await queryClient.invalidateQueries({ 
+        queryKey: ["expenses"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["dashboard"]
+      });
       toast.success("Expense created");
     },
     onError: () => {
@@ -108,10 +113,12 @@ export function useUpdateExpense() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["expenses"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Expense updated");
     },
     onError: () => {
@@ -135,10 +142,12 @@ export function useDeleteExpense() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["expenses"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Expense deleted");
     },
     onError: () => {

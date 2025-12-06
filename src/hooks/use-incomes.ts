@@ -73,10 +73,12 @@ export function useCreateIncome() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["incomes"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income added");
     },
     onError: () => {
@@ -103,10 +105,12 @@ export function useUpdateIncome() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["incomes"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income updated");
     },
     onError: () => {
@@ -130,10 +134,12 @@ export function useDeleteIncome() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["incomes"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["incomes"],
+        refetchType: "active"
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Income deleted");
     },
     onError: () => {
