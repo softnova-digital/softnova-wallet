@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Category {
-  id        String      @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
   type      CategoryType @default(EXPENSE) // Unified: EXPENSE or INCOME
-  icon      String      @default("folder")
-  color     String      @default("#2ECC71")
-  isDefault Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  icon      String       @default("folder")
+  color     String       @default("#2ECC71")
+  isDefault Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   expenses  Expense[]
   incomes   Income[]
   budgets   Budget[]
@@ -41,7 +41,7 @@ model Label {
 model Expense {
   id              String         @id @default(cuid())
   amount          Float
-  description     String?        // Description is now optional
+  description     String? // Description is now optional
   date            DateTime
   payee           String
   categoryId      String
@@ -62,7 +62,7 @@ model Expense {
 model Income {
   id          String   @id @default(cuid())
   amount      Float
-  description String
+  description String? // Description is now optional
   date        DateTime
   source      String // Who paid you (client name, employer, etc.)
   categoryId  String

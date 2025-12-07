@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { amount, description, date, source, categoryId } = body;
 
-    if (!amount || !description || !date || !source || !categoryId) {
+    // Description is now optional, only validate required fields
+    if (!amount || !date || !source || !categoryId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }

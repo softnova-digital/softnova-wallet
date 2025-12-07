@@ -43,14 +43,18 @@ export function useDashboard() {
   return useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const response = await fetch("/api/dashboard");
+      const response = await fetch("/api/dashboard", {
+        cache: 'no-store' // Bypass browser cache
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch dashboard data");
       }
       return response.json();
     },
-    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
-    refetchOnWindowFocus: true, // Refetch when user returns to the tab
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't keep unused data in cache
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 }
 

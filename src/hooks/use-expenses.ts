@@ -84,7 +84,8 @@ export function useCreateExpense() {
         queryKey: ["expenses"],
         refetchType: "active"
       });
-      await queryClient.invalidateQueries({ 
+      // Invalidate dashboard without refetchType so it refetches even when not mounted
+      queryClient.invalidateQueries({ 
         queryKey: ["dashboard"]
       });
       toast.success("Expense created");
@@ -118,7 +119,10 @@ export function useUpdateExpense() {
         queryKey: ["expenses"],
         refetchType: "active"
       });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      // Invalidate dashboard without refetchType so it refetches even when not mounted
+      queryClient.invalidateQueries({ 
+        queryKey: ["dashboard"]
+      });
       toast.success("Expense updated");
     },
     onError: () => {
@@ -147,7 +151,10 @@ export function useDeleteExpense() {
         queryKey: ["expenses"],
         refetchType: "active"
       });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      // Invalidate dashboard without refetchType so it refetches even when not mounted
+      queryClient.invalidateQueries({ 
+        queryKey: ["dashboard"]
+      });
       toast.success("Expense deleted");
     },
     onError: () => {
