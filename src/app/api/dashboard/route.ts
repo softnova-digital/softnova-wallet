@@ -160,7 +160,7 @@ export async function GET() {
     ]);
 
     // Calculate spent amount for each budget
-    const budgetQueries = budgets.map((budget) => {
+    const budgetQueries = budgets.map((budget: (typeof budgets)[0]) => {
       let periodStart: Date;
       let periodEnd: Date;
 
@@ -200,63 +200,83 @@ export async function GET() {
     const budgetExpenses = await Promise.all(budgetQueries);
 
     let budgetAlerts = 0;
-    const budgetsWithSpent = budgets.map((budget, index) => {
-      const spent = budgetExpenses[index]._sum.amount || 0;
-      const percentage = (spent / budget.amount) * 100;
+    const budgetsWithSpent = budgets.map(
+      (budget: (typeof budgets)[0], index: number) => {
+        const spent = budgetExpenses[index]._sum.amount || 0;
+        const percentage = (spent / budget.amount) * 100;
 
-      if (percentage >= 80) {
-        budgetAlerts++;
+        if (percentage >= 80) {
+          budgetAlerts++;
+        }
+
+        return {
+          ...budget,
+          spent,
+        };
       }
+    );
 
-      return {
-        ...budget,
-        spent,
-      };
-    });
-
-    const chartData = expensesByCategory.map((e) => {
-      const category = categories.find((c) => c.id === e.categoryId);
-      return {
-        name: category?.name || "Unknown",
-        value: e._sum.amount || 0,
-        color: category?.color || "#2ECC71",
-      };
-    });
+    const chartData = expensesByCategory.map(
+      (e: { categoryId: string; _sum: { amount: number | null } }) => {
+        const category = categories.find(
+          (c: (typeof categories)[0]) => c.id === e.categoryId
+        );
+        return {
+          name: category?.name || "Unknown",
+          value: e._sum.amount || 0,
+          color: category?.color || "#2ECC71",
+        };
+      }
+    );
 
     const thisMonthExpenseTotal = thisMonthExpenses._sum.amount || 0;
     const lastMonthExpenseTotal = lastMonthExpenses._sum.amount || 0;
     const expenseMonthlyChange =
       lastMonthExpenseTotal > 0
-        ? ((thisMonthExpenseTotal - lastMonthExpenseTotal) / lastMonthExpenseTotal) * 100
+        ? ((thisMonthExpenseTotal - lastMonthExpenseTotal) /
+            lastMonthExpenseTotal) *
+          100
         : 0;
 
     const thisMonthIncomeTotal = thisMonthIncomes._sum.amount || 0;
     const lastMonthIncomeTotal = lastMonthIncomes._sum.amount || 0;
     const incomeMonthlyChange =
       lastMonthIncomeTotal > 0
-        ? ((thisMonthIncomeTotal - lastMonthIncomeTotal) / lastMonthIncomeTotal) * 100
+        ? ((thisMonthIncomeTotal - lastMonthIncomeTotal) /
+            lastMonthIncomeTotal) *
+          100
         : 0;
 
     const netBalance = thisMonthIncomeTotal - thisMonthExpenseTotal;
 
-    return NextResponse.json({
-      stats: {
-        monthlyIncome: {
-          value: thisMonthIncomeTotal,
-          change: incomeMonthlyChange,
+    return NextResponse.json(
+      {
+        stats: {
+          monthlyIncome: {
+            value: thisMonthIncomeTotal,
+            change: incomeMonthlyChange,
+          },
+          monthlyExpenses: {
+            value: thisMonthExpenseTotal,
+            change: expenseMonthlyChange,
+          },
+          netBalance,
+          budgetAlerts,
         },
-        monthlyExpenses: {
-          value: thisMonthExpenseTotal,
-          change: expenseMonthlyChange,
-        },
-        netBalance,
-        budgetAlerts,
+        recentExpenses,
+        recentIncomes,
+        budgets: budgetsWithSpent,
+        chartData,
       },
-      recentExpenses,
-      recentIncomes,
-      budgets: budgetsWithSpent,
-      chartData,
-    });
+      {
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
     return NextResponse.json(
@@ -265,4 +285,3 @@ export async function GET() {
     );
   }
 }
-

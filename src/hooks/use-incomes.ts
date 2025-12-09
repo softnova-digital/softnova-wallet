@@ -78,8 +78,8 @@ export function useCreateIncome() {
         queryKey: ["incomes"],
         refetchType: "active"
       });
-      // Invalidate dashboard without refetchType so it refetches even when not mounted
-      queryClient.invalidateQueries({ 
+      // Force refetch dashboard even if not currently mounted
+      await queryClient.refetchQueries({ 
         queryKey: ["dashboard"]
       });
       toast.success("Income added");
@@ -113,8 +113,8 @@ export function useUpdateIncome() {
         queryKey: ["incomes"],
         refetchType: "active"
       });
-      // Invalidate dashboard without refetchType so it refetches even when not mounted
-      queryClient.invalidateQueries({ 
+      // Force refetch dashboard even if not currently mounted
+      await queryClient.refetchQueries({ 
         queryKey: ["dashboard"]
       });
       toast.success("Income updated");
@@ -145,8 +145,8 @@ export function useDeleteIncome() {
         queryKey: ["incomes"],
         refetchType: "active"
       });
-      // Invalidate dashboard without refetchType so it refetches even when not mounted
-      queryClient.invalidateQueries({ 
+      // Force refetch dashboard even if not currently mounted
+      await queryClient.refetchQueries({ 
         queryKey: ["dashboard"]
       });
       toast.success("Income deleted");

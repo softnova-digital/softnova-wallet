@@ -16,33 +16,19 @@ import type { Category, Label } from "@/types";
 interface AddExpenseButtonProps {
   categories: Category[];
   labels: Label[];
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  showTrigger?: boolean;
 }
 
-export function AddExpenseButton({ 
-  categories, 
-  labels,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-  showTrigger = true,
-}: AddExpenseButtonProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-  
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const onOpenChange = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalOpen;
+export function AddExpenseButton({ categories, labels }: AddExpenseButtonProps) {
+  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {showTrigger && (
-        <DialogTrigger asChild>
-          <Button className="btn-press shrink-0 min-h-[44px]">
-            <Plus className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Add Expense</span>
-          </Button>
-        </DialogTrigger>
-      )}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="btn-press shrink-0 min-h-[44px]">
+          <Plus className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Add Expense</span>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Add New Expense</DialogTitle>
@@ -50,7 +36,7 @@ export function AddExpenseButton({
         <ExpenseForm
           categories={categories}
           labels={labels}
-          onSuccess={() => onOpenChange(false)}
+          onSuccess={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>
