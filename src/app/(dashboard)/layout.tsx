@@ -13,6 +13,7 @@ import { NavLink } from "@/components/nav-link";
 import { MobileNav } from "@/components/mobile-nav";
 import { Logo } from "@/components/logo";
 import { FloatingActionButton } from "@/components/floating-action-button";
+import { db } from "@/lib/db";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -39,6 +40,21 @@ export default async function DashboardLayout({
     lastName: user.lastName,
     email: user.emailAddresses[0]?.emailAddress || "",
   };
+
+  // Fetch categories and labels for FloatingActionButton
+  const [expenseCategories, incomeCategories, labels] = await Promise.all([
+    db.category.findMany({
+      where: { type: "EXPENSE" },
+      orderBy: { name: "asc" },
+    }),
+    db.category.findMany({
+      where: { type: "INCOME" },
+      orderBy: { name: "asc" },
+    }),
+    db.label.findMany({
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,7 +118,11 @@ export default async function DashboardLayout({
       </main>
 
       {/* Floating Action Button - Mobile Only */}
-      <FloatingActionButton />
+      <FloatingActionButton 
+        expenseCategories={expenseCategories}
+        incomeCategories={incomeCategories}
+        labels={labels}
+      />
     </div>
   );
 }

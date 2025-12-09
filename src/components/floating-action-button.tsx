@@ -1,85 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ExpenseForm } from "@/components/expense-form";
-import { IncomeForm } from "@/components/income-form";
 import { cn } from "@/lib/utils";
+import { AddExpenseButton } from "@/components/add-expense-button";
+import { AddIncomeButton } from "@/components/add-income-button";
 import type { Category, Label } from "@/types";
 
-export function FloatingActionButton() {
+interface FloatingActionButtonProps {
+  expenseCategories: Category[];
+  incomeCategories: Category[];
+  labels: Label[];
+}
+
+export function FloatingActionButton({
+  expenseCategories,
+  incomeCategories,
+  labels,
+}: FloatingActionButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeForm, setActiveForm] = useState<"expense" | "income" | null>(
-    null
-  );
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [incomeCategories, setIncomeCategories] = useState<Category[]>(
-    []
-  );
-  const [labels, setLabels] = useState<Label[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && activeForm) {
-      fetchData();
-    }
-  }, [isOpen, activeForm]);
-
-  async function fetchData() {
-    setIsLoading(true);
-    try {
-      const [expenseCategoriesRes, incomeCategoriesRes, labelsRes] = await Promise.all(
-        [
-          fetch("/api/categories?type=EXPENSE"),
-          fetch("/api/categories?type=INCOME"),
-          fetch("/api/labels"),
-        ]
-      );
-
-      if (expenseCategoriesRes.ok) {
-        const cats = await expenseCategoriesRes.json();
-        setCategories(cats);
-      }
-
-      if (incomeCategoriesRes.ok) {
-        const cats = await incomeCategoriesRes.json();
-        setIncomeCategories(cats);
-      }
-
-      if (labelsRes.ok) {
-        const labs = await labelsRes.json();
-        setLabels(labs);
-      }
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [incomeDialogOpen, setIncomeDialogOpen] = useState(false);
 
   const handleExpenseClick = () => {
-    setActiveForm("expense");
-    setIsOpen(true);
+    setExpenseDialogOpen(true);
+    setIsOpen(false);
   };
 
   const handleIncomeClick = () => {
-    setActiveForm("income");
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
+    setIncomeDialogOpen(true);
     setIsOpen(false);
-    // Reset form after animation
-    setTimeout(() => {
-      setActiveForm(null);
-    }, 200);
   };
 
   return (
@@ -159,46 +110,20 @@ export function FloatingActionButton() {
         </div>
       </div>
 
-      {/* Dialogs */}
-      <Dialog
-        open={isOpen && activeForm === "expense"}
-        onOpenChange={handleClose}
-      >
-        <DialogContent className="max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Add New Expense</DialogTitle>
-          </DialogHeader>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <ExpenseForm
-              categories={categories}
-              labels={labels}
-              onSuccess={handleClose}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={isOpen && activeForm === "income"}
-        onOpenChange={handleClose}
-      >
-        <DialogContent className="max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Add New Income</DialogTitle>
-          </DialogHeader>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <IncomeForm categories={incomeCategories} onSuccess={handleClose} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Use the same components as desktop */}
+      <AddExpenseButton
+        categories={expenseCategories}
+        labels={labels}
+        open={expenseDialogOpen}
+        onOpenChange={setExpenseDialogOpen}
+        showTrigger={false}
+      />
+      <AddIncomeButton
+        categories={incomeCategories}
+        open={incomeDialogOpen}
+        onOpenChange={setIncomeDialogOpen}
+        showTrigger={false}
+      />
     </>
   );
 }
