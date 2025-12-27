@@ -79,8 +79,8 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
     setIsLoading(true);
     try {
       const url = category
-        ? `/api/categories/${category.id}`
-        : "/api/categories";
+        ? `/api/budgets/categories/${category.id}`
+        : "/api/budgets/categories";
       const method = category ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -90,15 +90,18 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save category");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || "Failed to save category";
+        throw new Error(errorMessage);
       }
 
       toast.success(category ? "Category updated" : "Category created");
       router.refresh();
       onSuccess?.();
     } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong");
+      console.error("Category save error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

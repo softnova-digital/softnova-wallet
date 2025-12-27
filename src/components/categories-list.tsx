@@ -61,7 +61,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
     if (!deleteCategory) return;
 
     try {
-      const response = await fetch(`/api/categories/${deleteCategory.id}`, {
+      const response = await fetch(`/api/budgets/categories/${deleteCategory.id}`, {
         method: "DELETE",
       });
 

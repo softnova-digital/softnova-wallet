@@ -1,10 +1,25 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { z } from "zod";
 
 // Cache configuration for GET requests
 export const revalidate = 10; // Revalidate every 10 seconds
 export const dynamic = "force-dynamic"; // Force dynamic for user-specific data
+
+const createIncomeSchema = z.object({
+  amount: z.union([
+    z.number().positive(),
+    z.string().refine((val) => {
+      const parsed = parseFloat(val);
+      return !isNaN(parsed) && parsed > 0;
+    }, { message: "Amount must be a positive number" }).transform((val) => parseFloat(val)),
+  ]),
+  description: z.string().optional(),
+  date: z.string(),
+  source: z.string().min(1),
+  categoryId: z.string().min(1),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,25 +113,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amount, description, date, source, categoryId } = body;
-
-    // Description is now optional, only validate required fields
-    if (!amount || !date || !source || !categoryId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+    const validatedData = createIncomeSchema.parse(body);
 
     const income = await db.income.create({
       data: {
-        amount: parseFloat(amount),
-        description,
-        date: new Date(date),
-        source,
-        categoryId,
+        amount: validatedData.amount,
+        description: validatedData.description || null,
+        date: new Date(validatedData.date),
+        source: validatedData.source,
+        categoryId: validatedData.categoryId,
         userId,
-        userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
+        userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.emailAddresses[0]?.emailAddress || "Unknown",
       },
       include: {
         category: true,
@@ -125,6 +132,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(income, { status: 201 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid data", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Error creating income:", error);
     return NextResponse.json(
       { error: "Failed to create income" },
