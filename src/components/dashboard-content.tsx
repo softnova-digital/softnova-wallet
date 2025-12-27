@@ -1,6 +1,7 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
+import { format } from "date-fns";
 import { DashboardCard } from "@/components/dashboard-card";
 import { RecentExpenses } from "@/components/recent-expenses";
 import { RecentIncomes } from "@/components/recent-incomes";
@@ -12,20 +13,64 @@ import {
   Receipt,
   Wallet,
   AlertTriangle,
+  CalendarIcon,
 } from "lucide-react";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard, type DashboardTimeRange } from "@/hooks/use-dashboard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export const DashboardContent = memo(function DashboardContent() {
-  const { data, isLoading, error } = useDashboard();
+  const [range, setRange] = useState<DashboardTimeRange>("monthly");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+  const { data, isLoading, error } = useDashboard({
+    range,
+    from: startDate,
+    to: endDate,
+  });
+
+  const getRangeDescription = () => {
+    switch (range) {
+      case "monthly":
+        return "this month";
+      case "yearly":
+        return "this year";
+      case "custom":
+        if (startDate && endDate) {
+          return `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`;
+        }
+        return "selected period";
+      default:
+        return "this month";
+    }
+  };
+
+  const rangeDescription = getRangeDescription();
 
   if (isLoading) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <div className="animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Overview of your company finances
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Overview of your company finances
+            </p>
+          </div>
         </div>
         <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
@@ -69,21 +114,89 @@ export const DashboardContent = memo(function DashboardContent() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="animate-fade-in">
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Overview of your company finances
-        </p>
+      <div className="flex flex-row items-center justify-between gap-4 animate-fade-in">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base hidden sm:block">
+            Overview of your company finances
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <Select
+            value={range}
+            onValueChange={(value: DashboardTimeRange) => setRange(value)}
+          >
+            <SelectTrigger className="w-[130px] sm:w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value="custom" className="hidden md:flex">Custom Range</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {range === "custom" && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "MMM d, yyyy") : "Start"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground">-</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "MMM d, yyyy") : "End"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <DashboardCard
-          title="Monthly Income"
+          title="Income"
           value={`₹${stats.monthlyIncome.value.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
-          description="from last month"
+          description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
           icon={Wallet}
           trend={{
             value: Math.abs(Math.round(stats.monthlyIncome.change)),
@@ -93,11 +206,11 @@ export const DashboardContent = memo(function DashboardContent() {
           className="border-blue-500/20"
         />
         <DashboardCard
-          title="Monthly Expenses"
+          title="Expenses"
           value={`₹${stats.monthlyExpenses.value.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
-          description="from last month"
+          description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
           icon={Receipt}
           trend={{
             value: Math.abs(Math.round(stats.monthlyExpenses.change)),
@@ -110,7 +223,7 @@ export const DashboardContent = memo(function DashboardContent() {
           value={`${stats.netBalance >= 0 ? '+' : '-'}₹${Math.abs(stats.netBalance).toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
-          description="this month"
+          description={rangeDescription}
           icon={stats.netBalance >= 0 ? TrendingUp : TrendingDown}
           className={stats.netBalance >= 0 ? "border-green-500/20" : "border-destructive/20"}
           index={2}

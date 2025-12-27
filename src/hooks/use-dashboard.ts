@@ -39,11 +39,24 @@ interface DashboardData {
   chartData: DashboardChartData[];
 }
 
-export function useDashboard() {
+export type DashboardTimeRange = "monthly" | "yearly" | "custom";
+
+interface UseDashboardOptions {
+  range?: DashboardTimeRange;
+  from?: Date;
+  to?: Date;
+}
+
+export function useDashboard({ range = "monthly", from, to }: UseDashboardOptions = {}) {
+  const queryParams = new URLSearchParams();
+  if (range) queryParams.set("range", range);
+  if (from) queryParams.set("from", from.toISOString());
+  if (to) queryParams.set("to", to.toISOString());
+
   return useQuery<DashboardData>({
-    queryKey: ["dashboard"],
+    queryKey: ["dashboard", range, from?.toISOString(), to?.toISOString()],
     queryFn: async () => {
-      const response = await fetch("/api/dashboard", {
+      const response = await fetch(`/api/dashboard?${queryParams.toString()}`, {
         cache: 'no-store' // Bypass browser cache
       });
       if (!response.ok) {

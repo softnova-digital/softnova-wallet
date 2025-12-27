@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   startOfMonth,
@@ -9,13 +9,15 @@ import {
   startOfYear,
   endOfYear,
   subMonths,
+  subYears,
+  parseISO,
 } from "date-fns";
 
 // Cache configuration for dashboard data
-export const revalidate = 30; // Revalidate every 30 seconds
-export const dynamic = "force-dynamic"; // Force dynamic rendering for user-specific data
+export const revalidate = 0; // Disable cache for dynamic filtering
+export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
 
@@ -23,35 +25,60 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const range = searchParams.get("range") || "monthly";
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+
     const now = new Date();
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
+    
+    // Default to monthly
+    let currentStart = startOfMonth(now);
+    let currentEnd = endOfMonth(now);
+    let prevStart = startOfMonth(subMonths(now, 1));
+    let prevEnd = endOfMonth(subMonths(now, 1));
+
+    if (range === "yearly") {
+      currentStart = startOfYear(now);
+      currentEnd = endOfYear(now);
+      prevStart = startOfYear(subYears(now, 1));
+      prevEnd = endOfYear(subYears(now, 1));
+    } else if (range === "custom" && from && to) {
+      currentStart = parseISO(from);
+      currentEnd = parseISO(to);
+      // For custom range, currently no comparison or compare to 0
+      // Could implement "same period length before" logic if needed
+      prevStart = new Date(0); // far past
+      prevEnd = new Date(0);
+    }
+
+    // Still needed for budget calculations
     const weekStart = startOfWeek(now);
     const weekEnd = endOfWeek(now);
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
     const yearStart = startOfYear(now);
     const yearEnd = endOfYear(now);
-    const lastMonthStart = startOfMonth(subMonths(now, 1));
-    const lastMonthEnd = endOfMonth(subMonths(now, 1));
 
     // Parallelize all queries for better performance
     const [
-      thisMonthExpenses,
-      lastMonthExpenses,
-      thisMonthIncomes,
-      lastMonthIncomes,
+      currentPeriodExpenses,
+      lastPeriodExpenses,
+      currentPeriodIncomes,
+      lastPeriodIncomes,
       budgets,
       recentExpenses,
       recentIncomes,
       expensesByCategory,
       categories,
     ] = await Promise.all([
-      // Get this month's expenses
+      // Get current period's expenses
       db.expense.aggregate({
         where: {
           userId,
           date: {
-            gte: monthStart,
-            lte: monthEnd,
+            gte: currentStart,
+            lte: currentEnd,
           },
         },
         _sum: {
@@ -59,26 +86,26 @@ export async function GET() {
         },
         _count: true,
       }),
-      // Get last month's expenses for comparison
+      // Get last period's expenses for comparison
       db.expense.aggregate({
         where: {
           userId,
           date: {
-            gte: lastMonthStart,
-            lte: lastMonthEnd,
+            gte: prevStart,
+            lte: prevEnd,
           },
         },
         _sum: {
           amount: true,
         },
       }),
-      // Get this month's incomes
+      // Get current period's incomes
       db.income.aggregate({
         where: {
           userId,
           date: {
-            gte: monthStart,
-            lte: monthEnd,
+            gte: currentStart,
+            lte: currentEnd,
           },
         },
         _sum: {
@@ -86,13 +113,13 @@ export async function GET() {
         },
         _count: true,
       }),
-      // Get last month's incomes for comparison
+      // Get last period's incomes for comparison
       db.income.aggregate({
         where: {
           userId,
           date: {
-            gte: lastMonthStart,
-            lte: lastMonthEnd,
+            gte: prevStart,
+            lte: prevEnd,
           },
         },
         _sum: {
@@ -108,7 +135,7 @@ export async function GET() {
           category: true,
         },
       }),
-      // Get recent expenses
+      // Get recent expenses (always top 5 most recent)
       db.expense.findMany({
         where: {
           userId,
@@ -139,14 +166,14 @@ export async function GET() {
           category: true,
         },
       }),
-      // Get expenses by category for the chart
+      // Get expenses by category for the chart (for selected period)
       db.expense.groupBy({
         by: ["categoryId"],
         where: {
           userId,
           date: {
-            gte: monthStart,
-            lte: monthEnd,
+            gte: currentStart,
+            lte: currentEnd,
           },
         },
         _sum: {
@@ -159,7 +186,7 @@ export async function GET() {
       }),
     ]);
 
-    // Calculate spent amount for each budget
+    // Calculate spent amount for each budget (Logic remains based on CURRENT real-time)
     const budgetQueries = budgets.map((budget: (typeof budgets)[0]) => {
       let periodStart: Date;
       let periodEnd: Date;
@@ -229,36 +256,38 @@ export async function GET() {
       }
     );
 
-    const thisMonthExpenseTotal = thisMonthExpenses._sum.amount || 0;
-    const lastMonthExpenseTotal = lastMonthExpenses._sum.amount || 0;
-    const expenseMonthlyChange =
-      lastMonthExpenseTotal > 0
-        ? ((thisMonthExpenseTotal - lastMonthExpenseTotal) /
-            lastMonthExpenseTotal) *
+    const currentExpenseTotal = currentPeriodExpenses._sum.amount || 0;
+    const lastPeriodExpenseTotal = lastPeriodExpenses._sum.amount || 0;
+    
+    // Avoid division by zero
+    const expenseChange =
+      lastPeriodExpenseTotal > 0
+        ? ((currentExpenseTotal - lastPeriodExpenseTotal) /
+        lastPeriodExpenseTotal) *
           100
-        : 0;
+        : range === "custom" ? 0 : 0; // If no previous data, 0 change or 100%? 0 is safer.
 
-    const thisMonthIncomeTotal = thisMonthIncomes._sum.amount || 0;
-    const lastMonthIncomeTotal = lastMonthIncomes._sum.amount || 0;
-    const incomeMonthlyChange =
-      lastMonthIncomeTotal > 0
-        ? ((thisMonthIncomeTotal - lastMonthIncomeTotal) /
-            lastMonthIncomeTotal) *
+    const currentIncomeTotal = currentPeriodIncomes._sum.amount || 0;
+    const lastPeriodIncomeTotal = lastPeriodIncomes._sum.amount || 0;
+    const incomeChange =
+      lastPeriodIncomeTotal > 0
+        ? ((currentIncomeTotal - lastPeriodIncomeTotal) /
+        lastPeriodIncomeTotal) *
           100
-        : 0;
+        : range === "custom" ? 0 : 0;
 
-    const netBalance = thisMonthIncomeTotal - thisMonthExpenseTotal;
+    const netBalance = currentIncomeTotal - currentExpenseTotal;
 
     return NextResponse.json(
       {
         stats: {
-          monthlyIncome: {
-            value: thisMonthIncomeTotal,
-            change: incomeMonthlyChange,
+          monthlyIncome: { // Keeping key name for frontend compatibility, but value is dynamic
+            value: currentIncomeTotal,
+            change: incomeChange,
           },
           monthlyExpenses: {
-            value: thisMonthExpenseTotal,
-            change: expenseMonthlyChange,
+            value: currentExpenseTotal,
+            change: expenseChange,
           },
           netBalance,
           budgetAlerts,
@@ -267,6 +296,11 @@ export async function GET() {
         recentIncomes,
         budgets: budgetsWithSpent,
         chartData,
+        meta: { // return meta info to help frontend display correct context
+           range,
+           from: currentStart.toISOString(),
+           to: currentEnd.toISOString()
+        }
       },
       {
         headers: {
