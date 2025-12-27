@@ -1,15 +1,21 @@
 import { SignIn } from "@clerk/nextjs";
+import Image from "next/image";
 
 export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-1 mb-4">
-            <span className="text-4xl font-bold text-foreground">Soft</span>
-            <span className="text-4xl font-bold text-primary">noVa</span>
+      <div>
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Softnova Digital"
+              width={300}
+              height={90}
+              priority
+              className="h-20 w-auto"
+            />
           </div>
-          <p className="text-muted-foreground">Digital</p>
         </div>
         <SignIn
           appearance={{
@@ -33,7 +39,7 @@ export default function SignInPage() {
           signUpUrl={undefined}
         />
       </div>
-    </div>
+   </div>
   );
 }
 
