@@ -14,7 +14,7 @@ import {
 } from "date-fns";
 
 // Cache configuration for dashboard data
-export const revalidate = 0; // Disable cache for dynamic filtering
+export const revalidate = 30; // Cache for 30 seconds
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -186,12 +186,25 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    // Calculate spent amount for each budget (Logic remains based on CURRENT real-time)
-    const budgetQueries = budgets.map((budget: (typeof budgets)[0]) => {
+    // Calculate spent amount for each budget (Optimized: group by period + category to reduce queries)
+    // Group budgets by period and categoryId to batch queries
+    const budgetGroups = new Map<string, typeof budgets>();
+    
+    budgets.forEach((budget) => {
+      const key = `${budget.period}-${budget.categoryId || 'all'}`;
+      if (!budgetGroups.has(key)) {
+        budgetGroups.set(key, []);
+      }
+      budgetGroups.get(key)!.push(budget);
+    });
+
+    // Create one query per unique period+category combination
+    const budgetQueries = Array.from(budgetGroups.entries()).map(([key, groupBudgets]) => {
+      const firstBudget = groupBudgets[0];
       let periodStart: Date;
       let periodEnd: Date;
 
-      switch (budget.period) {
+      switch (firstBudget.period) {
         case "weekly":
           periodStart = weekStart;
           periodEnd = weekEnd;
@@ -209,27 +222,41 @@ export async function GET(request: NextRequest) {
           periodEnd = monthEnd;
       }
 
-      return db.expense.aggregate({
-        where: {
-          userId,
-          date: {
-            gte: periodStart,
-            lte: periodEnd,
+      return {
+        key,
+        budgets: groupBudgets,
+        query: db.expense.aggregate({
+          where: {
+            userId,
+            date: {
+              gte: periodStart,
+              lte: periodEnd,
+            },
+            ...(firstBudget.categoryId ? { categoryId: firstBudget.categoryId } : {}),
           },
-          ...(budget.categoryId ? { categoryId: budget.categoryId } : {}),
-        },
-        _sum: {
-          amount: true,
-        },
+          _sum: {
+            amount: true,
+          },
+        }),
+      };
+    });
+
+    const budgetResults = await Promise.all(budgetQueries.map(({ query }) => query));
+    
+    // Map results back to individual budgets
+    const budgetExpensesMap = new Map<string, number>();
+    budgetQueries.forEach(({ key, budgets: groupBudgets }, index) => {
+      const spent = budgetResults[index]._sum.amount || 0;
+      // All budgets in this group have the same spent amount
+      groupBudgets.forEach((budget) => {
+        budgetExpensesMap.set(budget.id, spent);
       });
     });
 
-    const budgetExpenses = await Promise.all(budgetQueries);
-
     let budgetAlerts = 0;
     const budgetsWithSpent = budgets.map(
-      (budget: (typeof budgets)[0], index: number) => {
-        const spent = budgetExpenses[index]._sum.amount || 0;
+      (budget: (typeof budgets)[0]) => {
+        const spent = budgetExpensesMap.get(budget.id) || 0;
         const percentage = (spent / budget.amount) * 100;
 
         if (percentage >= 80) {
@@ -304,10 +331,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
         },
       }
     );

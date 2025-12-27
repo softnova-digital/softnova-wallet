@@ -40,6 +40,10 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { ExpenseForm } from "@/components/expense-form";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { 
+  LoadingCard, 
+  LoadingSpinner 
+} from "@/components/ui/loading-spinner";
 import type { Category, Label, Expense } from "@/types";
 
 interface ExpensesListProps {
@@ -65,16 +69,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
   }
 
   if (loading) {
-    return (
-      <Card className="animate-pulse">
-        <CardContent className="p-8 text-center text-muted-foreground">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span>Loading expenses...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <LoadingCard text="Loading expenses..." />;
   }
 
   if (error) {
@@ -350,12 +345,19 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteExpenseMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
+              disabled={deleteExpenseMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteExpenseMutation.isPending ? (
+                <LoadingSpinner size="sm" text="Deleting..." />
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

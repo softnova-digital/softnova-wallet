@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Form,
   FormControl,
@@ -162,7 +163,11 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : label ? "Update Label" : "Create Label"}
+            {isLoading ? (
+              <LoadingSpinner size="sm" text="Saving..." />
+            ) : (
+              label ? "Update Label" : "Create Label"
+            )}
           </Button>
         </div>
       </form>

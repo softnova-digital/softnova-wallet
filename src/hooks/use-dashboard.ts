@@ -64,9 +64,9 @@ export function useDashboard({ range = "monthly", from, to }: UseDashboardOption
       }
       return response.json();
     },
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't keep unused data in cache
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
     refetchOnMount: true,
   });
 }

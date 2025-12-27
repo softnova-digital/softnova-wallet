@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ExpensesList } from "@/components/expenses-list";
-import { ExpenseFilters } from "@/components/expense-filters";
-import { AddExpenseButton } from "@/components/add-expense-button";
+import { ExpensesPageClient } from "@/components/expenses-page-client";
 
 export const metadata: Metadata = {
   title: "Expenses",
@@ -30,17 +29,7 @@ export default async function ExpensesPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Expenses</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Track and manage all your business expenses
-          </p>
-        </div>
-        <AddExpenseButton categories={categories} labels={labels} />
-      </div>
-
-      <ExpenseFilters categories={categories} />
+      <ExpensesPageClient categories={categories} labels={labels} />
       
       <ExpensesList categories={categories} labels={labels} />
     </div>

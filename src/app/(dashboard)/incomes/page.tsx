@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { IncomesList } from "@/components/incomes-list";
-import { IncomeFilters } from "@/components/income-filters";
-import { AddIncomeButton } from "@/components/add-income-button";
+import { IncomesPageClient } from "@/components/incomes-page-client";
 
 export const metadata: Metadata = {
   title: "Incomes",
@@ -52,17 +51,7 @@ export default async function IncomesPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Incomes</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Track and manage all your income sources
-          </p>
-        </div>
-        <AddIncomeButton categories={categories} />
-      </div>
-
-      <IncomeFilters categories={categories} />
+      <IncomesPageClient categories={categories} />
       
       <IncomesList categories={categories} />
     </div>

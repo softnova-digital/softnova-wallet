@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Form,
   FormControl,
@@ -185,7 +186,11 @@ export function BudgetForm({ categories, budget, onSuccess }: BudgetFormProps) {
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : budget ? "Update Budget" : "Create Budget"}
+            {isLoading ? (
+              <LoadingSpinner size="sm" text="Saving..." />
+            ) : (
+              budget ? "Update Budget" : "Create Budget"
+            )}
           </Button>
         </div>
       </form>

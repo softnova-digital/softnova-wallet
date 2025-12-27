@@ -10,6 +10,7 @@ import { useCreateIncome, useUpdateIncome } from "@/hooks/use-incomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Form,
   FormControl,
@@ -229,11 +230,11 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
             disabled={createIncome.isPending || updateIncome.isPending} 
             className="btn-press w-full sm:w-auto min-h-[44px]"
           >
-            {createIncome.isPending || updateIncome.isPending
-              ? "Saving..."
-              : income
-              ? "Update Income"
-              : "Add Income"}
+            {(createIncome.isPending || updateIncome.isPending) ? (
+              <LoadingSpinner size="sm" text="Saving..." />
+            ) : (
+              income ? "Update Income" : "Add Income"
+            )}
           </Button>
         </div>
       </form>

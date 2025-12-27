@@ -57,6 +57,8 @@ model Expense {
   @@index([userId])
   @@index([categoryId])
   @@index([date])
+  @@index([userId, date]) // Composite index for common filter pattern
+  @@index([userId, categoryId, date]) // For filtered queries
 }
 
 model Income {
@@ -75,6 +77,8 @@ model Income {
   @@index([userId])
   @@index([categoryId])
   @@index([date])
+  @@index([userId, date]) // Composite index for common filter pattern
+  @@index([userId, categoryId, date]) // For filtered queries
 }
 
 model ExpenseLabel {

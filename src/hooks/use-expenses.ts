@@ -40,9 +40,9 @@ export function useExpenses() {
       }
       return response.json();
     },
-    staleTime: 0, // Always consider data stale for expenses to ensure fresh data
+    staleTime: 10 * 1000, // 10 seconds - balance freshness and performance
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Only refetch when explicitly needed
   });
 }
 

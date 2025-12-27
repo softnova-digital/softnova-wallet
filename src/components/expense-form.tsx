@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Form,
   FormControl,
@@ -372,13 +373,11 @@ export function ExpenseForm({
             disabled={createExpense.isPending || updateExpense.isPending || isUploadingReceipt}
             className="w-full sm:w-auto min-h-[44px]"
           >
-            {isUploadingReceipt
-              ? "Uploading Receipt..."
-              : createExpense.isPending || updateExpense.isPending
-              ? "Saving..."
-              : expense
-              ? "Update Expense"
-              : "Add Expense"}
+            {(isUploadingReceipt || createExpense.isPending || updateExpense.isPending) ? (
+              <LoadingSpinner size="sm" text={isUploadingReceipt ? "Uploading Receipt..." : "Saving..."} />
+            ) : (
+              expense ? "Update Expense" : "Add Expense"
+            )}
           </Button>
         </div>
       </form>

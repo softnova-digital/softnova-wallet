@@ -38,9 +38,9 @@ export function useIncomes() {
       }
       return response.json();
     },
-    staleTime: 0,
+    staleTime: 10 * 1000, // 10 seconds - balance freshness and performance
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Only refetch when explicitly needed
   });
 }
 

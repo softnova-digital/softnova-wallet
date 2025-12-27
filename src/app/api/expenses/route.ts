@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate");
     const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(
+      parseInt(searchParams.get("limit") || "20"),
+      100 // Maximum limit to prevent very large queries
+    );
 
     const where: Record<string, unknown> = {
       userId, // Critical: Filter by userId for security and performance
@@ -93,9 +96,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0",
+          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
         },
       }
     );

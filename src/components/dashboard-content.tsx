@@ -1,12 +1,13 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { DashboardCard } from "@/components/dashboard-card";
 import { RecentExpenses } from "@/components/recent-expenses";
 import { RecentIncomes } from "@/components/recent-incomes";
 import { BudgetOverview } from "@/components/budget-overview";
 import { SpendingChart } from "@/components/spending-chart";
+import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import {
   TrendingUp,
   TrendingDown,
@@ -43,7 +44,7 @@ export const DashboardContent = memo(function DashboardContent() {
     to: endDate,
   });
 
-  const getRangeDescription = () => {
+  const rangeDescription = useMemo(() => {
     switch (range) {
       case "monthly":
         return "this month";
@@ -57,9 +58,11 @@ export const DashboardContent = memo(function DashboardContent() {
       default:
         return "this month";
     }
-  };
+  }, [range, startDate, endDate]);
 
-  const rangeDescription = getRangeDescription();
+  const handleRangeChange = useCallback((value: DashboardTimeRange) => {
+    setRange(value);
+  }, []);
 
   if (isLoading) {
     return (
@@ -80,9 +83,7 @@ export const DashboardContent = memo(function DashboardContent() {
             />
           ))}
         </div>
-        <div className="text-center py-12 text-muted-foreground">
-          <p>Loading dashboard data...</p>
-        </div>
+        <LoadingOverlay text="Loading dashboard data..." />
       </div>
     );
   }
@@ -125,7 +126,7 @@ export const DashboardContent = memo(function DashboardContent() {
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           <Select
             value={range}
-            onValueChange={(value: DashboardTimeRange) => setRange(value)}
+            onValueChange={handleRangeChange}
           >
             <SelectTrigger className="w-[130px] sm:w-[180px]">
               <SelectValue placeholder="Select range" />

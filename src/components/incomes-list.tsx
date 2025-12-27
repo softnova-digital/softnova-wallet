@@ -40,6 +40,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { IncomeForm } from "@/components/income-form";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Category, Income } from "@/types";
 
 interface IncomesListProps {
@@ -64,16 +65,7 @@ export function IncomesList({ categories }: IncomesListProps) {
   }
 
   if (loading) {
-    return (
-      <Card className="animate-pulse">
-        <CardContent className="p-8 text-center text-muted-foreground">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span>Loading incomes...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <LoadingCard text="Loading incomes..." />;
   }
 
   if (error) {
@@ -285,12 +277,19 @@ export function IncomesList({ categories }: IncomesListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteIncomeMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
+              disabled={deleteIncomeMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteIncomeMutation.isPending ? (
+                <LoadingSpinner size="sm" text="Deleting..." />
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
