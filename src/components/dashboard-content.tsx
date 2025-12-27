@@ -10,8 +10,8 @@ import { SpendingChart } from "@/components/spending-chart";
 import {
   TrendingUp,
   TrendingDown,
-  Receipt,
-  Wallet,
+  CircleArrowUp,
+  CircleArrowDown,
   AlertTriangle,
   CalendarIcon,
 } from "lucide-react";
@@ -197,7 +197,7 @@ export const DashboardContent = memo(function DashboardContent() {
             minimumFractionDigits: 2,
           })}`}
           description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
-          icon={Wallet}
+          icon={CircleArrowDown}
           trend={{
             value: Math.abs(Math.round(stats.monthlyIncome.change)),
             isPositive: stats.monthlyIncome.change >= 0,
@@ -211,7 +211,7 @@ export const DashboardContent = memo(function DashboardContent() {
             minimumFractionDigits: 2,
           })}`}
           description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
-          icon={Receipt}
+          icon={CircleArrowUp}
           trend={{
             value: Math.abs(Math.round(stats.monthlyExpenses.change)),
             isPositive: stats.monthlyExpenses.change <= 0,

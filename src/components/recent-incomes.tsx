@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import Link from "next/link";
 import { getCategoryIcon } from "@/lib/category-icons";
-import { ArrowRight, Wallet } from "lucide-react";
+import { ArrowRight, CircleArrowDown } from "lucide-react";
 
 interface IncomeWithCategory {
   id: string;
@@ -32,7 +32,7 @@ export const RecentIncomes = memo(function RecentIncomes({ incomes }: RecentInco
       <Card className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-blue-500" />
+            <CircleArrowDown className="h-5 w-5 text-blue-500" />
             Recent Incomes
           </CardTitle>
         </CardHeader>
@@ -53,7 +53,7 @@ export const RecentIncomes = memo(function RecentIncomes({ incomes }: RecentInco
     <Card className="animate-fade-in-up overflow-hidden" style={{ animationDelay: "400ms" }}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Wallet className="h-5 w-5 text-blue-500" />
+          <CircleArrowDown className="h-5 w-5 text-blue-500" />
           Recent Incomes
         </CardTitle>
         <Link

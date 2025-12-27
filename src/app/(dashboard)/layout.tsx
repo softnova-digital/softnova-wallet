@@ -4,20 +4,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   LayoutDashboard,
-  Receipt,
-  Wallet,
+  TrendingUp,
+  TrendingDown,
   PiggyBank,
   Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/nav-link";
-import { MobileNav } from "@/components/mobile-nav";
 import { Logo } from "@/components/logo";
+import { MobileBottomNavWrapper } from "@/components/mobile-bottom-nav-wrapper";
 
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expenses", label: "Expenses", icon: Receipt },
-  { href: "/incomes", label: "Incomes", icon: Wallet },
+  { href: "/expenses", label: "Expenses", icon: TrendingDown },
+  { href: "/incomes", label: "Incomes", icon: TrendingUp },
   { href: "/budgets", label: "Budgets", icon: PiggyBank },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -89,7 +89,7 @@ export default async function DashboardLayout({
 
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-16 md:h-20 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 md:px-4 lg:hidden">
-        <MobileNav user={userData} />
+        <div className="w-10 lg:hidden" /> {/* Spacer for centering logo */}
         <Link href="/" className="flex items-center flex-1 justify-center">
           <Logo variant="mobile" />
         </Link>
@@ -102,6 +102,9 @@ export default async function DashboardLayout({
       </main>
 
 
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavWrapper />
+      
     </div>
   );
 }
