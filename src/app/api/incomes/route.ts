@@ -115,16 +115,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createIncomeSchema.parse(body);
 
+    // Only include description if it's provided and not empty
+    // If omitted, Prisma will handle it according to schema (null for String?)
+    const data: {
+      amount: number;
+      date: Date;
+      source: string;
+      categoryId: string;
+      userId: string;
+      userName: string;
+      description?: string;
+    } = {
+      amount: validatedData.amount,
+      date: new Date(validatedData.date),
+      source: validatedData.source,
+      categoryId: validatedData.categoryId,
+      userId,
+      userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.emailAddresses[0]?.emailAddress || "Unknown",
+    };
+
+    // Only add description if it's a non-empty string
+    if (validatedData.description && validatedData.description.trim() !== "") {
+      data.description = validatedData.description.trim();
+    }
+
     const income = await db.income.create({
-      data: {
-        amount: validatedData.amount,
-        description: validatedData.description || null,
-        date: new Date(validatedData.date),
-        source: validatedData.source,
-        categoryId: validatedData.categoryId,
-        userId,
-        userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.emailAddresses[0]?.emailAddress || "Unknown",
-      },
+      data,
       include: {
         category: true,
       },

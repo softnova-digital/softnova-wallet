@@ -83,7 +83,7 @@ export async function PUT(
       where: { id },
       data: {
         ...(validatedData.amount !== undefined && { amount: validatedData.amount }),
-        ...(validatedData.description !== undefined && { description: validatedData.description }),
+        ...(validatedData.description !== undefined && { description: validatedData.description || null }),
         ...(validatedData.date !== undefined && { date: new Date(validatedData.date) }),
         ...(validatedData.source !== undefined && { source: validatedData.source }),
         ...(validatedData.categoryId !== undefined && { categoryId: validatedData.categoryId }),
