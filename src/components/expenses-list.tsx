@@ -111,7 +111,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
             <TableRow className="hover:bg-transparent">
               <TableHead>Description</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Paid By</TableHead>
+
               <TableHead>Recorded By</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
@@ -170,9 +170,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                       <span className="text-sm">{expense.category?.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {expense.payee}
-                  </TableCell>
+
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">{expense.userName}</Badge>
                   </TableCell>
@@ -251,7 +249,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{expense.description}</p>
-                      <p className="text-sm text-muted-foreground">{expense.payee}</p>
+
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <span>{format(new Date(expense.date), "MMM d, yyyy")}</span>
                         <span>•</span>

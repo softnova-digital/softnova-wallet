@@ -42,7 +42,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
   
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") || "");
-  const [payee, setPayee] = useState(searchParams.get("payee") || "");
+
   const [startDate, setStartDate] = useState<Date | undefined>(
     searchParams.get("startDate") ? new Date(searchParams.get("startDate")!) : undefined
   );
@@ -55,7 +55,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (categoryId) params.set("categoryId", categoryId);
-    if (payee) params.set("payee", payee);
+
     if (startDate) params.set("startDate", startDate.toISOString());
     if (endDate) params.set("endDate", endDate.toISOString());
     
@@ -66,15 +66,15 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
   const clearFilters = () => {
     setSearch("");
     setCategoryId("");
-    setPayee("");
+
     setStartDate(undefined);
     setEndDate(undefined);
     router.push("/expenses");
     setMobileFiltersOpen(false);
   };
 
-  const hasFilters = search || categoryId || payee || startDate || endDate;
-  const activeFilterCount = [search, categoryId, payee, startDate, endDate].filter(Boolean).length;
+  const hasFilters = search || categoryId || startDate || endDate;
+  const activeFilterCount = [search, categoryId, startDate, endDate].filter(Boolean).length;
 
   const filterContent = (
     <div className="space-y-4">
@@ -114,22 +114,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-muted-foreground">Paid By</label>
-        <Select value={payee} onValueChange={setPayee}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="All Partners" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Partners</SelectItem>
-            {PARTNERS.map((partner) => (
-              <SelectItem key={partner} value={partner}>
-                {partner}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
@@ -238,19 +223,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
           </SelectContent>
         </Select>
 
-        <Select value={payee} onValueChange={setPayee}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Paid By" />
-          </SelectTrigger>
-          <SelectContent className="animate-scale-in">
-            <SelectItem value="all">All Partners</SelectItem>
-            {PARTNERS.map((partner) => (
-              <SelectItem key={partner} value={partner}>
-                {partner}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
 
         <Popover>
           <PopoverTrigger asChild>
@@ -321,7 +294,6 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
               const params = new URLSearchParams();
               if (e.target.value) params.set("search", e.target.value);
               if (categoryId) params.set("categoryId", categoryId);
-              if (payee) params.set("payee", payee);
               if (startDate) params.set("startDate", startDate.toISOString());
               if (endDate) params.set("endDate", endDate.toISOString());
               router.push(`/expenses?${params.toString()}`);

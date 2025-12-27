@@ -253,30 +253,7 @@ export function ExpenseForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="payee"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Paid By</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select who paid for this expense" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {PARTNERS.map((partner) => (
-                    <SelectItem key={partner} value={partner}>
-                      {partner}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
 
         <FormField
           control={form.control}
