@@ -87,7 +87,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-bounce-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-fade-in">
             <Receipt className="h-8 w-8 text-muted-foreground/50" />
           </div>
           <p className="text-lg font-medium">No expenses found</p>
@@ -120,7 +120,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                 <TableRow 
                   key={expense.id} 
                   className="table-row-animate animate-fade-in-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <TableCell>
                     <div>

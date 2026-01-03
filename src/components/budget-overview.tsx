@@ -68,7 +68,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
             <div 
               key={budget.id} 
               className="space-y-2.5 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors animate-fade-in-up"
-              style={{ animationDelay: `${350 + index * 75}ms` }}
+              style={{ animationDelay: `${index * 25}ms` }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

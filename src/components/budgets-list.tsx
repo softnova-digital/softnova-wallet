@@ -83,7 +83,7 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-bounce-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-fade-in">
             <TrendingUp className="h-8 w-8 text-muted-foreground/50" />
           </div>
           <p className="text-lg font-medium">No budgets set</p>
@@ -115,7 +115,7 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
             if (periodBudgets.length === 0) return null;
 
             return (
-              <div key={period} className="animate-fade-in-up" style={{ animationDelay: `${periodIndex * 100}ms` }}>
+              <div key={period} className="animate-fade-in-up" style={{ animationDelay: `${periodIndex * 50}ms` }}>
                 <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary" />
                   {periodLabels[period]}
@@ -139,7 +139,7 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
                           isOverBudget && "border-destructive/50",
                           isWarning && "border-yellow-500/50"
                         )}
-                        style={{ animationDelay: `${(periodIndex * 100) + (index * 75)}ms` }}
+                        style={{ animationDelay: `${(periodIndex * 50) + (index * 25)}ms` }}
                       >
                         {/* Status indicator bar */}
                         <div 

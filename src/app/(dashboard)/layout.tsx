@@ -60,7 +60,7 @@ export default async function DashboardLayout({
               <div 
                 key={item.href} 
                 className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 75}ms` }}
+                style={{ animationDelay: `${index * 25}ms` }}
               >
                 <NavLink href={item.href}>
                   <item.icon className="h-5 w-5" />

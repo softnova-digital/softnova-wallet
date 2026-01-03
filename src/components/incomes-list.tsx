@@ -83,7 +83,7 @@ export function IncomesList({ categories }: IncomesListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center animate-bounce-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center animate-fade-in">
             <Wallet className="h-8 w-8 text-blue-500/50" />
           </div>
           <p className="text-lg font-medium">No incomes found</p>
@@ -116,7 +116,7 @@ export function IncomesList({ categories }: IncomesListProps) {
                 <TableRow 
                   key={income.id} 
                   className="table-row-animate animate-fade-in-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <TableCell>
                     <p className="font-medium">{income.description}</p>

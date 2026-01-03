@@ -6,8 +6,13 @@ import { DashboardCard } from "@/components/dashboard-card";
 import { RecentExpenses } from "@/components/recent-expenses";
 import { RecentIncomes } from "@/components/recent-incomes";
 import { BudgetOverview } from "@/components/budget-overview";
-import { SpendingChart } from "@/components/spending-chart";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import dynamic from "next/dynamic";
+
+const SpendingChart = dynamic(() => import("@/components/spending-chart").then(mod => ({ default: mod.SpendingChart })), {
+  ssr: false,
+  loading: () => <div className="h-[300px] animate-pulse bg-accent/50 rounded-lg" />
+});
 import {
   TrendingUp,
   TrendingDown,

@@ -126,7 +126,15 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "date-fns", "recharts", "@radix-ui/react-icons"],
     // Enable partial prerendering for better performance
     ppr: false, // Can enable when stable
+    // Optimize CSS
+    optimizeCss: true,
   },
+  
+  // Production optimizations
+  // SWC minification is enabled by default in Next.js 16 and cannot be disabled
+  
+  // Bundle optimization - Next.js 16 handles this automatically with Turbopack
+  // Code splitting is handled automatically for dynamic imports
   
   // Turbopack configuration (Next.js 16+ uses Turbopack by default)
   turbopack: {

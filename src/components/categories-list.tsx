@@ -86,7 +86,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-bounce-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-fade-in">
             <Tags className="h-8 w-8 text-muted-foreground/50" />
           </div>
           <p className="text-lg font-medium">No categories found</p>
@@ -105,11 +105,11 @@ export function CategoriesList({ categories }: CategoriesListProps) {
             <Card 
               key={category.id} 
               className="relative card-interactive hover-lift animate-fade-in-up overflow-hidden group"
-              style={{ animationDelay: `${index * 50}ms` }}
+              style={{ animationDelay: `${index * 25}ms` }}
             >
               {/* Color accent bar */}
               <div 
-                className="absolute top-0 left-0 right-0 h-1 transition-all duration-300 group-hover:h-1.5"
+                className="absolute top-0 left-0 right-0 h-1 transition-all duration-150 group-hover:h-1.5"
                 style={{ backgroundColor: category.color }}
               />
               

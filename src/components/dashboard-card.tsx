@@ -30,7 +30,7 @@ export function DashboardCard({
         "card-interactive hover-lift animate-fade-in-up overflow-hidden relative",
         className
       )}
-      style={{ animationDelay: `${index * 100}ms` }}
+      style={{ animationDelay: `${index * 50}ms` }}
     >
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/5 pointer-events-none" />
@@ -39,7 +39,7 @@ export function DashboardCard({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <div className="p-2 rounded-lg bg-primary/10 transition-transform duration-300 group-hover:scale-110">
+        <div className="p-2 rounded-lg bg-primary/10 transition-transform duration-150 group-hover:scale-105">
           <Icon className="h-4 w-4 text-primary" />
         </div>
       </CardHeader>
