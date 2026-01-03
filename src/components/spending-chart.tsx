@@ -25,7 +25,7 @@ interface SpendingChartProps {
 export function SpendingChart({ data }: SpendingChartProps) {
   if (data.length === 0) {
     return (
-      <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+      <Card className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PieChartIcon className="h-5 w-5 text-primary" />
@@ -48,7 +48,7 @@ export function SpendingChart({ data }: SpendingChartProps) {
   }
 
   return (
-    <Card className="animate-fade-in-up overflow-hidden" style={{ animationDelay: "200ms" }}>
+      <Card className="animate-fade-in-up overflow-hidden" style={{ animationDelay: "50ms" }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PieChartIcon className="h-5 w-5 text-primary" />
@@ -67,15 +67,15 @@ export function SpendingChart({ data }: SpendingChartProps) {
                 outerRadius={80}
                 paddingAngle={3}
                 dataKey="value"
-                animationBegin={300}
-                animationDuration={800}
+                animationBegin={0}
+                animationDuration={300}
                 animationEasing="ease-out"
               >
                 {data.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={entry.color}
-                    className="transition-all duration-200 hover:opacity-80"
+                    className="transition-opacity duration-150 hover:opacity-80"
                     style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
                   />
                 ))}

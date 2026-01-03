@@ -25,7 +25,7 @@ export function NavLink({ href, children }: NavLinkProps) {
     >
       {/* Hover effect background */}
       {!isActive && (
-        <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+        <span className="absolute inset-0 bg-linear-to-r from-primary/0 via-primary/5 to-primary/0 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
       )}
       
       {/* Active indicator */}

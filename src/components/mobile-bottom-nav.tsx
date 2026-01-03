@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, TrendingDown, PiggyBank, Settings } from "lucide-react";
+import { LayoutDashboard, BanknoteArrowDown, BanknoteArrowUp, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/expenses", label: "Expenses", icon: TrendingDown },
-  { href: "/incomes", label: "Incomes", icon: TrendingUp },
-  { href: "/budgets", label: "Budgets", icon: PiggyBank },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/expenses", label: "Expenses", icon: BanknoteArrowUp },
+  { href: "/incomes", label: "Incomes", icon: BanknoteArrowDown },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -25,14 +24,14 @@ export function MobileBottomNav() {
         position: 'fixed',
       }}
     >
-      <div className="px-4 pb-1 pointer-events-none">
+      <div className="w-full pointer-events-none">
         <nav
-          className="border-t border-white/20 shadow-2xl rounded-t-2xl px-6 py-4 flex items-center justify-between pointer-events-auto w-full max-w-md mx-auto ring-1 ring-white/10 backdrop-blur-2xl"
+          className="border-t border-white/20 shadow-2xl rounded-t-2xl px-2 py-3 flex items-center justify-around pointer-events-auto w-full ring-1 ring-white/10 backdrop-blur-2xl"
           style={{ 
             position: 'relative', 
             zIndex: 99999, 
             backgroundColor: 'rgba(28, 28, 28, 0.95)', 
-            borderRadius: '20px' 
+            borderRadius: '20px 20px 0 0' 
           }}
         >
           {navItems.map((item) => {
@@ -44,18 +43,24 @@ export function MobileBottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all duration-300",
+                  "relative flex flex-col items-center justify-center gap-1 px-2 py-1.5 rounded-lg transition-all duration-300 min-w-0 flex-1",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,197,94,0.3)] scale-110"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
                 )}
               >
-                <Icon className={cn(" w-10 h-10 sm:w-12 sm:h-12", isActive && "fill-current")} />
+                <Icon className={cn("w-5 h-5")} />
+                {/* Label */}
+                <span className={cn(
+                  "text-[10px] font-medium text-center leading-tight",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {item.label}
+                </span>
                 {/* Active Indicator Dot */}
                 {isActive && (
-                  <span className="absolute -bottom-1 w-1 h-1 bg-current rounded-full" />
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
                 )}
-                <span className="sr-only">{item.label}</span>
               </Link>
             );
           })}

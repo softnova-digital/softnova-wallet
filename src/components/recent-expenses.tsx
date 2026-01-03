@@ -72,7 +72,7 @@ export const RecentExpenses = memo(function RecentExpenses({ expenses }: RecentE
               <div
                 key={expense.id}
                 className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-accent/50 hover:bg-accent transition-all duration-200 hover-lift animate-fade-in-up"
-                style={{ animationDelay: `${450 + index * 75}ms` }}
+                style={{ animationDelay: `${index * 25}ms` }}
               >
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                   <div
