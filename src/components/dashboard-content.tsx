@@ -34,7 +34,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 export const DashboardContent = memo(function DashboardContent() {
-  const [range, setRange] = useState<DashboardTimeRange>("monthly");
+  const [range, setRange] = useState<DashboardTimeRange>("all");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
@@ -46,6 +46,8 @@ export const DashboardContent = memo(function DashboardContent() {
 
   const rangeDescription = useMemo(() => {
     switch (range) {
+      case "all":
+        return "all time";
       case "monthly":
         return "this month";
       case "yearly":
@@ -56,7 +58,7 @@ export const DashboardContent = memo(function DashboardContent() {
         }
         return "selected period";
       default:
-        return "this month";
+        return "all time";
     }
   }, [range, startDate, endDate]);
 
@@ -132,6 +134,7 @@ export const DashboardContent = memo(function DashboardContent() {
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
               <SelectItem value="monthly">Monthly</SelectItem>
               <SelectItem value="yearly">Yearly</SelectItem>
               <SelectItem value="custom" className="hidden md:flex">Custom Range</SelectItem>
@@ -197,7 +200,7 @@ export const DashboardContent = memo(function DashboardContent() {
           value={`₹${stats.monthlyIncome.value.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
-          description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
+          description={range === 'custom' || range === 'all' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
           icon={CircleArrowDown}
           trend={{
             value: Math.abs(Math.round(stats.monthlyIncome.change)),
@@ -211,7 +214,7 @@ export const DashboardContent = memo(function DashboardContent() {
           value={`₹${stats.monthlyExpenses.value.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
           })}`}
-          description={range === 'custom' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
+          description={range === 'custom' || range === 'all' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
           icon={CircleArrowUp}
           trend={{
             value: Math.abs(Math.round(stats.monthlyExpenses.change)),

@@ -26,19 +26,24 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "monthly";
+    const range = searchParams.get("range") || "all";
     const from = searchParams.get("from");
     const to = searchParams.get("to");
 
     const now = new Date();
     
-    // Default to monthly
-    let currentStart = startOfMonth(now);
-    let currentEnd = endOfMonth(now);
-    let prevStart = startOfMonth(subMonths(now, 1));
-    let prevEnd = endOfMonth(subMonths(now, 1));
+    // Default to all time (entire period from start to end)
+    let currentStart = new Date(0); // Start from epoch (Jan 1, 1970)
+    let currentEnd = now;
+    let prevStart = new Date(0);
+    let prevEnd = new Date(0);
 
-    if (range === "yearly") {
+    if (range === "monthly") {
+      currentStart = startOfMonth(now);
+      currentEnd = endOfMonth(now);
+      prevStart = startOfMonth(subMonths(now, 1));
+      prevEnd = endOfMonth(subMonths(now, 1));
+    } else if (range === "yearly") {
       currentStart = startOfYear(now);
       currentEnd = endOfYear(now);
       prevStart = startOfYear(subYears(now, 1));
@@ -51,6 +56,7 @@ export async function GET(request: NextRequest) {
       prevStart = new Date(0); // far past
       prevEnd = new Date(0);
     }
+    // For "all" range, use the defaults set above (entire period)
 
     // Still needed for budget calculations
     const weekStart = startOfWeek(now);
@@ -287,21 +293,26 @@ export async function GET(request: NextRequest) {
     const lastPeriodExpenseTotal = lastPeriodExpenses._sum.amount || 0;
     
     // Avoid division by zero
+    // For "all" and "custom" ranges, there's no previous period to compare, so change is 0
     const expenseChange =
-      lastPeriodExpenseTotal > 0
+      range === "all" || range === "custom"
+        ? 0
+        : lastPeriodExpenseTotal > 0
         ? ((currentExpenseTotal - lastPeriodExpenseTotal) /
         lastPeriodExpenseTotal) *
           100
-        : range === "custom" ? 0 : 0; // If no previous data, 0 change or 100%? 0 is safer.
+        : 0; // If no previous data, 0 change
 
     const currentIncomeTotal = currentPeriodIncomes._sum.amount || 0;
     const lastPeriodIncomeTotal = lastPeriodIncomes._sum.amount || 0;
     const incomeChange =
-      lastPeriodIncomeTotal > 0
+      range === "all" || range === "custom"
+        ? 0
+        : lastPeriodIncomeTotal > 0
         ? ((currentIncomeTotal - lastPeriodIncomeTotal) /
         lastPeriodIncomeTotal) *
           100
-        : range === "custom" ? 0 : 0;
+        : 0;
 
     const netBalance = currentIncomeTotal - currentExpenseTotal;
 
