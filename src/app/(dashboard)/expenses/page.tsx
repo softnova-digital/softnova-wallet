@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
 import { ExpensesList } from "@/components/expenses-list";
 import { ExpensesPageClient } from "@/components/expenses-page-client";
+import { getExpenseCategories, getLabels } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Expenses",
@@ -18,13 +18,8 @@ export default async function ExpensesPage() {
   }
 
   const [categories, labels] = await Promise.all([
-    db.category.findMany({
-      where: { type: "EXPENSE" },
-      orderBy: { name: "asc" },
-    }),
-    db.label.findMany({
-      orderBy: { name: "asc" },
-    }),
+    getExpenseCategories(),
+    getLabels(),
   ]);
 
   return (

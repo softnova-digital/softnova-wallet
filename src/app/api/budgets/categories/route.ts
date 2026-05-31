@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { CategoryType } from "@prisma/client";
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag("categories");
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

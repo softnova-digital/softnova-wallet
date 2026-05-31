@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 
 // This route is now a redirect to the unified categories API with type filter
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag("categories");
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     console.error("Error creating income category:", error);

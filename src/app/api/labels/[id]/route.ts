@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -27,6 +28,7 @@ export async function PATCH(
       data: validatedData,
     });
 
+    revalidateTag("labels");
     return NextResponse.json(label);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -59,6 +61,7 @@ export async function DELETE(
       where: { id },
     });
 
+    revalidateTag("labels");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting label:", error);

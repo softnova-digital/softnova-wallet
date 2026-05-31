@@ -13,8 +13,6 @@ import {
   parseISO,
 } from "date-fns";
 
-// Cache configuration for dashboard data
-export const revalidate = 30; // Cache for 30 seconds
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -342,7 +340,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          "Cache-Control": "private, no-store",
         },
       }
     );

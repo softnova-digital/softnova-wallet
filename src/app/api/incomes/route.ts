@@ -3,9 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
-// Cache configuration for GET requests
-export const revalidate = 10; // Revalidate every 10 seconds
-export const dynamic = "force-dynamic"; // Force dynamic for user-specific data
+export const dynamic = "force-dynamic";
 
 const createIncomeSchema = z.object({
   amount: z.union([
@@ -90,7 +88,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
+          "Cache-Control": "private, no-store",
         },
       }
     );

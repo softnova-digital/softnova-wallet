@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag("labels");
     return NextResponse.json(label, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

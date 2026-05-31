@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { BudgetsList } from "@/components/budgets-list";
 import { AddBudgetButton } from "@/components/add-budget-button";
+import { getExpenseCategories } from "@/lib/queries";
 import {
   startOfWeek,
   endOfWeek,
@@ -35,18 +36,11 @@ export default async function BudgetsPage() {
 
   const [budgets, categories] = await Promise.all([
     db.budget.findMany({
-      where: {
-        userId, // Filter by userId for security and performance
-      },
-      include: {
-        category: true,
-      },
+      where: { userId },
+      include: { category: true },
       orderBy: [{ period: "asc" }],
     }),
-    db.category.findMany({
-      where: { type: "EXPENSE" }, // Budgets are only for expenses
-      orderBy: { name: "asc" },
-    }),
+    getExpenseCategories(),
   ]);
 
   // Calculate spent amount for each budget - optimized to avoid N+1 queries

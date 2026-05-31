@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -70,6 +71,7 @@ export async function PATCH(
       data: validatedData,
     });
 
+    revalidateTag("categories");
     return NextResponse.json(category);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -119,6 +121,7 @@ export async function DELETE(
       where: { id },
     });
 
+    revalidateTag("categories");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting category:", error);

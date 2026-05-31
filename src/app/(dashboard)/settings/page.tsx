@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { SettingsTabs } from "@/components/settings-tabs";
+import { getExpenseCategories, getIncomeCategories, getLabels } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -17,26 +18,14 @@ export default async function SettingsPage() {
   }
 
   const [labels, expenseCategories, incomeCategories, expenseCounts, incomeCounts] = await Promise.all([
-    db.label.findMany({
-      orderBy: { name: "asc" },
-    }),
-    // Get expense categories
-    db.category.findMany({
-      where: { type: "EXPENSE" },
-      orderBy: { name: "asc" },
-    }),
-    // Get income categories
-    db.category.findMany({
-      where: { type: "INCOME" },
-      orderBy: { name: "asc" },
-    }),
-    // Get expense counts per category
+    getLabels(),
+    getExpenseCategories(),
+    getIncomeCategories(),
     db.expense.groupBy({
       by: ["categoryId"],
       where: { userId },
       _count: { id: true },
     }),
-    // Get income counts per category
     db.income.groupBy({
       by: ["categoryId"],
       where: { userId },
