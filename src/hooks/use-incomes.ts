@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { Income } from "@/types";
+import { UnauthorizedError } from "@/lib/errors";
 
 interface IncomesResponse {
   incomes: Income[];
@@ -33,9 +34,8 @@ export function useIncomes() {
       const response = await fetch(`/api/incomes?${params.toString()}`, {
         cache: 'no-store'
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch incomes");
-      }
+      if (response.status === 401) throw new UnauthorizedError();
+      if (!response.ok) throw new Error("Failed to fetch incomes");
       return response.json();
     },
     staleTime: 10 * 1000, // 10 seconds - balance freshness and performance

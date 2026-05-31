@@ -73,7 +73,7 @@ export default async function DashboardLayout({
           {/* User */}
           <div className="border-t border-border p-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
             <div className="flex items-center gap-3">
-              <UserButton afterSignOutUrl="/sign-in" />
+              <UserButton />
               <div className="flex-1 truncate">
                 <p className="text-sm font-medium text-foreground truncate">
                   {userData.firstName} {userData.lastName}
@@ -93,7 +93,7 @@ export default async function DashboardLayout({
         <Link href="/" className="flex items-center flex-1 justify-center">
           <Logo variant="mobile" />
         </Link>
-        <UserButton afterSignOutUrl="/sign-in" />
+        <UserButton />
       </header>
 
       {/* Main content — pb accounts for mobile bottom nav + iOS safe area */}

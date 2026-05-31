@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Expense, Income, Budget, Category } from "@/types";
+import { UnauthorizedError } from "@/lib/errors";
 
 interface DashboardStats {
   monthlyIncome: {
@@ -57,11 +58,10 @@ export function useDashboard({ range = "all", from, to }: UseDashboardOptions = 
     queryKey: ["dashboard", range, from?.toISOString(), to?.toISOString()],
     queryFn: async () => {
       const response = await fetch(`/api/dashboard?${queryParams.toString()}`, {
-        cache: 'no-store' // Bypass browser cache
+        cache: 'no-store'
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch dashboard data");
-      }
+      if (response.status === 401) throw new UnauthorizedError();
+      if (!response.ok) throw new Error("Failed to fetch dashboard data");
       return response.json();
     },
     staleTime: 30 * 1000, // 30 seconds

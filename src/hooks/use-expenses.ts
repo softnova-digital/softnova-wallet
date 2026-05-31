@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { Expense } from "@/types";
+import { UnauthorizedError } from "@/lib/errors";
 
 interface ExpensesResponse {
   expenses: Expense[];
@@ -33,11 +34,10 @@ export function useExpenses() {
       if (search) params.set("search", search);
 
       const response = await fetch(`/api/expenses?${params.toString()}`, {
-        cache: 'no-store' // Ensure fresh data from server
+        cache: 'no-store'
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch expenses");
-      }
+      if (response.status === 401) throw new UnauthorizedError();
+      if (!response.ok) throw new Error("Failed to fetch expenses");
       return response.json();
     },
     staleTime: 10 * 1000, // 10 seconds - balance freshness and performance

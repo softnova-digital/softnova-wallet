@@ -8,6 +8,7 @@ import { PWARegister } from "@/components/pwa-register";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { AuthGuard } from "@/components/auth-guard";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -74,6 +75,10 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
+      signInUrl="/sign-in"
+      afterSignOutUrl="/sign-in"
+      signInFallbackRedirectUrl="/"
+      // Disable sign-up — single-tenant app
       signUpUrl={undefined}
       signUpFallbackRedirectUrl={undefined}
     >
@@ -83,6 +88,7 @@ export default function RootLayout({
             <body className={`${dmSans.variable} font-sans antialiased`}>
               <NavigationProgress />
               <OfflineIndicator />
+              <AuthGuard />
               {children}
               <Toaster richColors position="top-right" />
               <PWARegister />
