@@ -1,146 +1,149 @@
-// Service Worker for Softnova Wallet PWA
-const CACHE_NAME = 'softnova-wallet-v1';
-const STATIC_CACHE_NAME = 'softnova-wallet-static-v1';
-const DYNAMIC_CACHE_NAME = 'softnova-wallet-dynamic-v1';
+// Service Worker — Softnova Wallet PWA
+// Strategy:
+//   /_next/static/*  → Cache-first  (immutable hashed assets)
+//   /api/*           → Network-only → offline JSON 503 on failure
+//   pages/documents  → Network-first → cached page fallback
+//   other same-origin → Network-first → cached fallback
 
-// Assets to cache on install
-const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/icons/favicon-for-public/web-app-manifest-192x192.png',
-  '/icons/favicon-for-public/web-app-manifest-512x512.png',
+const CACHE = "softnova-wallet-v3";
+
+const PRECACHE = [
+  "/",
+  "/manifest.json",
+  "/icons/favicon-for-public/web-app-manifest-192x192.png",
+  "/icons/favicon-for-public/web-app-manifest-512x512.png",
 ];
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
+// ── Install ──────────────────────────────────────────────────────────────────
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE).then((cache) =>
+      cache.addAll(PRECACHE).catch((err) => {
+        // Non-fatal: log and continue — SW still activates
+        console.warn("[SW] Pre-cache partial failure:", err);
+      })
+    )
   );
-  self.skipWaiting(); // Activate immediately
+  // Activate immediately without waiting for old tabs to close
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
+// ── Activate ─────────────────────────────────────────────────────────────────
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            return (
-              cacheName !== STATIC_CACHE_NAME &&
-              cacheName !== DYNAMIC_CACHE_NAME
-            );
-          })
-          .map((cacheName) => {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-      );
-    })
+    Promise.all([
+      // Delete every cache that isn't the current version
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k !== CACHE)
+            .map((k) => {
+              console.log("[SW] Deleting old cache:", k);
+              return caches.delete(k);
+            })
+        )
+      ),
+      // Take control of all open pages immediately
+      self.clients.claim(),
+    ])
   );
-  return self.clients.claim(); // Take control of all pages immediately
 });
 
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+self.addEventListener("fetch", (event) => {
   const { request } = event;
+
+  // Only handle GET
+  if (request.method !== "GET") return;
+
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
+  // ── External requests: pass through untouched ──────────────────────────
+  if (url.origin !== self.location.origin) return;
 
-  // Skip API routes and external URLs (they need network)
-  if (
-    url.pathname.startsWith('/api/') ||
-    url.origin !== self.location.origin
-  ) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      // Return cached version if available
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // Fetch from network
-      return fetch(request)
-        .then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone the response for caching
-          const responseToCache = response.clone();
-
-          // Cache dynamic content
-          caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback
-          if (request.destination === 'document') {
-            return caches.match('/');
-          }
-          // Return a simple offline page for other requests
-          return new Response('Offline', {
+  // ── API routes: network-only, structured offline response ──────────────
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(
+      fetch(request).catch(() =>
+        new Response(
+          JSON.stringify({
+            error: "offline",
+            message: "You are offline. Please check your connection and try again.",
+          }),
+          {
             status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain',
-            }),
-          });
+            headers: {
+              "Content-Type": "application/json",
+              "X-SW-Offline": "1",
+            },
+          }
+        )
+      )
+    );
+    return;
+  }
+
+  // ── Next.js static assets: cache-first (immutable, content-hashed) ─────
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
         });
+      })
+    );
+    return;
+  }
+
+  // ── Pages and everything else: network-first, cache fallback ───────────
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // Cache successful same-origin responses
+        if (response.ok && response.type === "basic") {
+          const clone = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+
+        // For document navigations, fall back to the cached shell
+        if (request.destination === "document") {
+          const shell = await caches.match("/");
+          if (shell) return shell;
+        }
+
+        return new Response("Offline", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" },
+        });
+      })
+  );
+});
+
+// ── Push notifications ────────────────────────────────────────────────────────
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Softnova Wallet", {
+      body: data.body || "You have a new notification",
+      icon: "/icons/favicon-for-public/web-app-manifest-192x192.png",
+      badge: "/icons/favicon-for-app/icon1.png",
+      vibrate: [200, 100, 200],
+      tag: "softnova-notification",
     })
   );
 });
 
-// Background sync for offline actions (future enhancement)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-expenses') {
-    event.waitUntil(syncExpenses());
-  }
-});
-
-async function syncExpenses() {
-  // This would sync offline expenses when connection is restored
-  console.log('[Service Worker] Syncing expenses...');
-}
-
-// Push notifications (future enhancement)
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Softnova Wallet';
-  const options = {
-    body: data.body || 'You have a new notification',
-    icon: '/icons/favicon-for-public/web-app-manifest-192x192.png',
-    badge: '/icons/favicon-for-app/icon1.png',
-    vibrate: [200, 100, 200],
-    tag: 'softnova-notification',
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/')
-  );
+  event.waitUntil(clients.openWindow("/"));
 });
-

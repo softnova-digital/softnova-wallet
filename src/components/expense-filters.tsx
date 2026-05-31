@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { CalendarIcon, Search, X, Filter } from "lucide-react";
@@ -39,7 +39,8 @@ interface ExpenseFiltersProps {
 export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") || "");
 
@@ -191,7 +192,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
     <>
       {/* Desktop Filters */}
       <div className="hidden md:flex flex-wrap gap-4 p-4 bg-card rounded-xl border border-border animate-fade-in-up">
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-50">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -204,7 +205,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
         </div>
 
         <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent className="animate-scale-in">
@@ -230,7 +231,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
             <Button
               variant="outline"
               className={cn(
-                "w-[160px] justify-start text-left font-normal",
+                "w-40 justify-start text-left font-normal",
                 !startDate && "text-muted-foreground"
               )}
             >
@@ -253,7 +254,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
             <Button
               variant="outline"
               className={cn(
-                "w-[160px] justify-start text-left font-normal",
+                "w-40 justify-start text-left font-normal",
                 !endDate && "text-muted-foreground"
               )}
             >
@@ -289,14 +290,18 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
             placeholder="Search..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value);
-              // Apply search immediately on mobile
-              const params = new URLSearchParams();
-              if (e.target.value) params.set("search", e.target.value);
-              if (categoryId) params.set("categoryId", categoryId);
-              if (startDate) params.set("startDate", startDate.toISOString());
-              if (endDate) params.set("endDate", endDate.toISOString());
-              router.push(`/expenses?${params.toString()}`);
+              const value = e.target.value;
+              setSearch(value);
+              // Debounce navigation — wait for the user to stop typing
+              if (searchDebounce.current) clearTimeout(searchDebounce.current);
+              searchDebounce.current = setTimeout(() => {
+                const params = new URLSearchParams();
+                if (value) params.set("search", value);
+                if (categoryId) params.set("categoryId", categoryId);
+                if (startDate) params.set("startDate", startDate.toISOString());
+                if (endDate) params.set("endDate", endDate.toISOString());
+                router.push(`/expenses?${params.toString()}`);
+              }, 400);
             }}
             className="pl-9"
           />

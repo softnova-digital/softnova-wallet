@@ -6,6 +6,8 @@ import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { PWARegister } from "@/components/pwa-register";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { NavigationProgress } from "@/components/navigation-progress";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -79,6 +81,8 @@ export default function RootLayout({
         <ReactQueryProvider>
           <html lang="en" className="dark">
             <body className={`${dmSans.variable} font-sans antialiased`}>
+              <NavigationProgress />
+              <OfflineIndicator />
               {children}
               <Toaster richColors position="top-right" />
               <PWARegister />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { CalendarIcon, Search, X, Filter } from "lucide-react";
@@ -32,13 +32,14 @@ import { getCategoryIcon } from "@/lib/category-icons";
 import { Badge } from "@/components/ui/badge";
 
 interface IncomeFiltersProps {
-  categories: Category[]; // Now uses unified Category type
+  categories: Category[];
 }
 
 export function IncomeFilters({ categories }: IncomeFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") || "");
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -55,7 +56,6 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
     if (categoryId) params.set("categoryId", categoryId);
     if (startDate) params.set("startDate", startDate.toISOString());
     if (endDate) params.set("endDate", endDate.toISOString());
-    
     router.push(`/incomes?${params.toString()}`);
     setMobileFiltersOpen(false);
   };
@@ -129,12 +129,7 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                initialFocus
-              />
+              <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
             </PopoverContent>
           </Popover>
         </div>
@@ -157,12 +152,7 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                initialFocus
-              />
+              <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
             </PopoverContent>
           </Popover>
         </div>
@@ -185,20 +175,20 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
     <>
       {/* Desktop Filters */}
       <div className="hidden md:flex flex-wrap gap-4 p-4 bg-card rounded-xl border border-border animate-fade-in-up">
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-50">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search incomes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 transition-all focus:ring-2 focus:ring-blue-500/20"
+              className="pl-9 transition-all focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
 
         <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent className="animate-scale-in">
@@ -221,22 +211,14 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn(
-                "w-[160px] justify-start text-left font-normal",
-                !startDate && "text-muted-foreground"
-              )}
+              className={cn("w-40 justify-start text-left font-normal", !startDate && "text-muted-foreground")}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 animate-scale-in">
-            <Calendar
-              mode="single"
-              selected={startDate}
-              onSelect={setStartDate}
-              initialFocus
-            />
+            <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
           </PopoverContent>
         </Popover>
 
@@ -244,27 +226,18 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn(
-                "w-[160px] justify-start text-left font-normal",
-                !endDate && "text-muted-foreground"
-              )}
+              className={cn("w-40 justify-start text-left font-normal", !endDate && "text-muted-foreground")}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 animate-scale-in">
-            <Calendar
-              mode="single"
-              selected={endDate}
-              onSelect={setEndDate}
-              initialFocus
-            />
+            <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
           </PopoverContent>
         </Popover>
 
         <Button onClick={applyFilters} className="btn-press">Apply</Button>
-        
         {hasFilters && (
           <Button variant="ghost" onClick={clearFilters} className="btn-press">
             <X className="h-4 w-4 mr-2" />
@@ -281,26 +254,31 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
             placeholder="Search..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value);
-              const params = new URLSearchParams();
-              if (e.target.value) params.set("search", e.target.value);
-              if (categoryId) params.set("categoryId", categoryId);
-              if (startDate) params.set("startDate", startDate.toISOString());
-              if (endDate) params.set("endDate", endDate.toISOString());
-              router.push(`/incomes?${params.toString()}`);
+              const value = e.target.value;
+              setSearch(value);
+              // Debounce navigation — wait for the user to stop typing
+              if (searchDebounce.current) clearTimeout(searchDebounce.current);
+              searchDebounce.current = setTimeout(() => {
+                const params = new URLSearchParams();
+                if (value) params.set("search", value);
+                if (categoryId) params.set("categoryId", categoryId);
+                if (startDate) params.set("startDate", startDate.toISOString());
+                if (endDate) params.set("endDate", endDate.toISOString());
+                router.push(`/incomes?${params.toString()}`);
+              }, 400);
             }}
             className="pl-9"
           />
         </div>
-        
+
         <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" className="shrink-0 relative">
               <Filter className="h-4 w-4 mr-2" />
               Filters
               {activeFilterCount > 0 && (
-                <Badge 
-                  className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-blue-600"
+                <Badge
+                  className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                   variant="default"
                 >
                   {activeFilterCount}
@@ -319,4 +297,3 @@ export function IncomeFilters({ categories }: IncomeFiltersProps) {
     </>
   );
 }
-

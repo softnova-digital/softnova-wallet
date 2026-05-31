@@ -381,41 +381,66 @@
   display: none !important;
 }
 
-/* Mobile-first improvements */
-@media (max-width: 768px) {
-  /* Better touch targets - minimum 44x44px */
+/* ── Mobile & touch ──────────────────────────────────────────────────────── */
+
+/*
+ * Remove the 300ms tap delay on all interactive elements globally.
+ * This is the single most impactful change for making a web app feel native.
+ */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* Minimum 44×44 touch targets on mobile (Apple HIG / WCAG 2.5.5) */
+@media (max-width: 1024px) {
   button,
   a,
   [role="button"],
   input[type="submit"],
   input[type="button"] {
     min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Improve tap highlight */
-  * {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-  }
-
-  /* Better scrolling on mobile */
-  body {
-    -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Touch manipulation for better mobile performance */
-.touch-manipulation {
-  touch-action: manipulation;
+/* Subtle tap highlight — feels native on dark UI */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Improved input focus on mobile */
+/* Active press feedback for tappable elements */
+button:active,
+a:active,
+[role="button"]:active {
+  opacity: 0.85;
+}
+
+/* Better momentum scrolling */
+body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Inputs never zoom on iOS (font-size < 16px triggers zoom) */
 @media (max-width: 768px) {
-  input:focus,
-  textarea:focus,
-  select:focus {
-    font-size: 16px; /* Prevents zoom on iOS */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1rem);
   }
+}
+
+/* Safe-area utility — applied via inline style where needed */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Reduced motion */

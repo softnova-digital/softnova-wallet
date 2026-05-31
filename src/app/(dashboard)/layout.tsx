@@ -88,7 +88,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 md:h-20 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 md:px-4 lg:hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 md:h-20 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60 px-3 md:px-4 lg:hidden">
         <div className="w-10 lg:hidden" /> {/* Spacer for centering logo */}
         <Link href="/" className="flex items-center flex-1 justify-center">
           <Logo variant="mobile" />
@@ -96,9 +96,14 @@ export default async function DashboardLayout({
         <UserButton afterSignOutUrl="/sign-in" />
       </header>
 
-      {/* Main content */}
-      <main className="lg:ml-64 min-h-screen pt-16 md:pt-20 lg:pt-0 grid-background pb-20 lg:pb-0">
-        <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">{children}</div>
+      {/* Main content — pb accounts for mobile bottom nav + iOS safe area */}
+      <main
+        className="lg:ml-64 min-h-screen pt-16 md:pt-20 lg:pt-0 grid-background"
+        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+          {children}
+        </div>
       </main>
 
 
