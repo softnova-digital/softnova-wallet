@@ -303,7 +303,7 @@ pnpm db:generate
 
 ---
 
-## License
+## License 
 
 Private — Softnova Digital
 
