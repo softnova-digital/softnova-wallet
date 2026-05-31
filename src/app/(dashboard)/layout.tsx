@@ -4,12 +4,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileBottomNavWrapper } from "@/components/mobile-bottom-nav-wrapper";
 import { Logo } from "@/components/logo";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function DashboardLayout({
   children,
@@ -33,14 +28,9 @@ export default async function DashboardLayout({
       <AppSidebar userData={userData} />
 
       <SidebarInset>
-        {/* Sticky top bar — contains the collapse/expand toggle on all breakpoints */}
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 backdrop-blur sticky top-0 z-10 px-4">
-          <SidebarTrigger className="shrink-0" />
-          <Separator orientation="vertical" className="h-4 mx-1" />
-          {/* Logo shown on mobile where the sidebar is hidden behind a drawer */}
-          <div className="md:hidden flex flex-1 justify-center">
-            <Logo variant="mobile" />
-          </div>
+        {/* Sticky top bar — mobile only, shows logo centred */}
+        <header className="md:hidden flex h-14 shrink-0 items-center justify-center border-b border-border bg-background/95 backdrop-blur sticky top-0 z-10 px-4">
+          <Logo variant="mobile" />
         </header>
 
         {/* Page content */}
