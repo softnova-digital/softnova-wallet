@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    revalidateTag("categories");
+    revalidateTag("categories", "seconds");
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     console.error("Error creating income category:", error);

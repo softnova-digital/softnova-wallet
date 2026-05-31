@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    revalidateTag("categories");
+    revalidateTag("categories", "seconds");
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

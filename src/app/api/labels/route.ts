@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    revalidateTag("labels");
+    revalidateTag("labels", "seconds");
     return NextResponse.json(label, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

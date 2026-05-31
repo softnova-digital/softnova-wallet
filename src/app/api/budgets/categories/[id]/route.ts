@@ -71,7 +71,7 @@ export async function PATCH(
       data: validatedData,
     });
 
-    revalidateTag("categories");
+    revalidateTag("categories", "seconds");
     return NextResponse.json(category);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -121,7 +121,7 @@ export async function DELETE(
       where: { id },
     });
 
-    revalidateTag("categories");
+    revalidateTag("categories", "seconds");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting category:", error);

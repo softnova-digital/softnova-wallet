@@ -28,7 +28,7 @@ export async function PATCH(
       data: validatedData,
     });
 
-    revalidateTag("labels");
+    revalidateTag("labels", "seconds");
     return NextResponse.json(label);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -61,7 +61,7 @@ export async function DELETE(
       where: { id },
     });
 
-    revalidateTag("labels");
+    revalidateTag("labels", "seconds");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting label:", error);

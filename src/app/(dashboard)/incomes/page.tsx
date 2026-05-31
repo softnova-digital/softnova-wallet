@@ -38,7 +38,7 @@ export default async function IncomesPage() {
       skipDuplicates: true,
     });
     // Bust the cache so the freshly seeded data is returned
-    revalidateTag("income-categories");
+    revalidateTag("income-categories", "seconds");
     categories = await getIncomeCategories();
   }
 
