@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Edit, Trash2, MoreHorizontal, AlertTriangle, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { BudgetForm } from "@/components/budget-form";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { useDeleteBudget } from "@/hooks/use-budgets";
 import type { Category } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -56,27 +54,13 @@ interface BudgetsListProps {
 }
 
 export function BudgetsList({ budgets, categories }: BudgetsListProps) {
-  const router = useRouter();
   const [editBudget, setEditBudget] = useState<BudgetWithSpent | null>(null);
   const [deleteBudget, setDeleteBudget] = useState<BudgetWithSpent | null>(null);
+  const deleteMutation = useDeleteBudget();
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteBudget) return;
-
-    try {
-      const response = await fetch(`/api/budgets/${deleteBudget.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      toast.success("Budget deleted");
-      setDeleteBudget(null);
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete budget");
-    }
+    deleteMutation.mutate(deleteBudget.id, { onSuccess: () => setDeleteBudget(null) });
   }
 
   if (budgets.length === 0) {
@@ -270,10 +254,7 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
             <BudgetForm
               categories={categories}
               budget={editBudget}
-              onSuccess={() => {
-                setEditBudget(null);
-                router.refresh();
-              }}
+              onSuccess={() => setEditBudget(null)}
             />
           )}
         </DialogContent>

@@ -1,9 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+
+// Maps each dashboard route to the API fetch that its page needs.
+// Keys must match the queryKey arrays used by the corresponding hooks.
+const ROUTE_PREFETCH: Record<string, { key: unknown[]; url: string }> = {
+  "/":        { key: ["dashboard", "all", undefined, undefined], url: "/api/dashboard?range=all" },
+  "/expenses":{ key: ["expenses", ""],                           url: "/api/expenses" },
+  "/budgets": { key: ["budgets"],                                url: "/api/budgets" },
+  "/incomes": { key: ["incomes", ""],                            url: "/api/incomes" },
+};
 
 interface NavLinkProps {
   href: string;
@@ -12,22 +22,39 @@ interface NavLinkProps {
 
 export function NavLink({ href, children }: NavLinkProps) {
   const pathname = usePathname();
-  // Track a pending click so the item turns active the instant it's tapped,
-  // before the server responds. Cleared when the route actually changes.
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [pending, setPending] = useState(false);
 
   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   useEffect(() => {
-    // Navigation landed — clear the optimistic state
     setPending(false);
   }, [pathname]);
 
   const showActive = isActive || pending;
 
+  // Warm both the Next.js router cache (RSC payload) and the React Query cache
+  // the moment the pointer approaches, so by the time the user clicks the page
+  // shell and its data are already in-flight or ready.
+  const handlePointerEnter = useCallback(() => {
+    if (isActive) return;
+    router.prefetch(href);
+    const entry = ROUTE_PREFETCH[href];
+    if (entry) {
+      queryClient.prefetchQuery({
+        queryKey: entry.key,
+        queryFn: () => fetch(entry.url).then((r) => r.json()),
+        staleTime: 3 * 60 * 1000,
+      });
+    }
+  }, [href, isActive, router, queryClient]);
+
   return (
     <Link
       href={href}
+      onMouseEnter={handlePointerEnter}
+      onTouchStart={handlePointerEnter}
       onClick={() => {
         if (!isActive) setPending(true);
       }}

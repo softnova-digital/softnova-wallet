@@ -64,10 +64,7 @@ export function useDashboard({ range = "all", from, to }: UseDashboardOptions = 
       if (!response.ok) throw new Error("Failed to fetch dashboard data");
       return response.json();
     },
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -49,7 +49,7 @@ interface BudgetFormProps {
 }
 
 export function BudgetForm({ categories, budget, onSuccess }: BudgetFormProps) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<BudgetFormValues>({
@@ -83,7 +83,8 @@ export function BudgetForm({ categories, budget, onSuccess }: BudgetFormProps) {
       }
 
       toast.success(budget ? "Budget updated" : "Budget created");
-      router.refresh();
+      await queryClient.invalidateQueries({ queryKey: ["budgets"], refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       onSuccess?.();
     } catch (error) {
       console.error(error);

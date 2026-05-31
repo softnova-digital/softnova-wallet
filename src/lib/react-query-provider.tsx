@@ -27,9 +27,14 @@ export function ReactQueryProvider({
         }),
         defaultOptions: {
           queries: {
-            staleTime: 30 * 1000, // 30 seconds — data is fresh across rapid navigations
-            gcTime: 5 * 60 * 1000, // 5 minutes
+            // 3 minutes: navigating between pages within a session never
+            // triggers a re-fetch unless the user has been away long enough
+            // that the data is genuinely likely to have changed.
+            staleTime: 3 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
             refetchOnWindowFocus: false,
+            // Only re-fetch on mount when data is actually stale (respects
+            // staleTime). Prevents the 2-5 s API call on every page visit.
             refetchOnMount: true,
             refetchOnReconnect: true,
             retry: (failureCount, error) => {

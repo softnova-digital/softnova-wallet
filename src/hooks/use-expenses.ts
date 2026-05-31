@@ -40,9 +40,7 @@ export function useExpenses() {
       if (!response.ok) throw new Error("Failed to fetch expenses");
       return response.json();
     },
-    staleTime: 10 * 1000, // 10 seconds - balance freshness and performance
-    refetchOnMount: true,
-    refetchOnWindowFocus: false, // Only refetch when explicitly needed
+    refetchOnWindowFocus: false,
   });
 }
 
