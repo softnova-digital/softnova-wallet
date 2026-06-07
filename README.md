@@ -1,6 +1,6 @@
 # Softnova Wallet
 
-Internal financial management application for Softnova Digital. Track company expenses, incomes, and budgets — installable as a Progressive Web App on any device.
+Internal financial management application for Softnova Digital. Track company expenses, incomes, budgets, and employee salaries — installable as a Progressive Web App on any device.
 
 **Status:** Production Ready · **Stack:** Next.js 16 · Prisma · Clerk · Vercel
 
@@ -20,6 +20,23 @@ Internal financial management application for Softnova Digital. Track company ex
 | **Labels** | Free-form tags on expenses, custom colors |
 | **Receipts** | Upload via Cloudinary, linked to expense records |
 
+### Employee & Salary Management
+
+| Area | Capabilities |
+|---|---|
+| **Employees** | Full name, phone, email, designation, profile image, active / inactive status |
+| **Salary Records** | Variable salary amount per month, manual entry, one record per employee per month enforced |
+| **Salary + Expense Integration** | Every salary payment auto-creates a linked expense in the Salary category |
+| **Filters** | Filter salary records by employee, month, and year |
+| **Duplicate Prevention** | System blocks a second salary entry for the same employee in the same month (409 conflict) |
+
+**Business rules:**
+- An employee can receive **at most one salary payment per month**
+- The salary **amount can change every month** — no fixed salary stored
+- Some months may have **no salary** — nothing is auto-generated
+- All salary records are entered **manually** — no recurring logic, no payroll processing
+- Salary payments automatically appear in **total expenses**, **dashboard analytics**, and **profit/loss** calculations via the linked expense
+
 ### Mobile & PWA
 
 - Installable on iPhone, Android, and desktop — works like a native app
@@ -36,8 +53,8 @@ Internal financial management application for Softnova Digital. Track company ex
 - `loading.tsx` skeletons on every route — skeleton appears the instant you tap, zero blank-screen time
 - `unstable_cache` for reference data (categories, labels) — cached 60 s server-side, busted immediately on mutation
 - Global React Query `staleTime: 30 s` — revisiting a page within 30 s serves from cache with no network round-trip
-- Contradictory `revalidate` + `force-dynamic` directives removed from all API routes
-- Incomes page: 3 sequential DB calls per request → 1 (seed only runs on first-ever request)
+- Parallel DB queries (`Promise.all`) used throughout API handlers
+- Prisma transactions for multi-table writes (salary record + expense creation)
 
 ### Authentication
 
@@ -113,7 +130,7 @@ pnpm install
 # Push schema and generate client
 pnpm db:push
 
-# Seed default expense categories
+# Seed default expense categories (includes Salary category)
 pnpm db:seed
 ```
 
@@ -158,7 +175,7 @@ pnpm db:migrate     # prisma migrate dev
 softnova-wallet/
 ├── prisma/
 │   ├── schema.prisma          # DB schema — unified Category model
-│   └── seed.ts                # Default expense categories
+│   └── seed.ts                # Default expense categories (incl. Salary)
 ├── public/
 │   ├── sw.js                  # Service worker (cache-first static, network-first pages)
 │   └── manifest.json          # PWA manifest with id, display_override, shortcuts
@@ -170,28 +187,39 @@ softnova-wallet/
     │   │   ├── expenses/      # loading.tsx + page.tsx
     │   │   ├── incomes/       # loading.tsx + page.tsx
     │   │   ├── budgets/       # loading.tsx + page.tsx
+    │   │   ├── employees/     # page.tsx — employee list, search, CRUD
+    │   │   ├── salary-records/# page.tsx — salary records, filters, CRUD
     │   │   └── settings/      # loading.tsx + page.tsx
     │   ├── api/               # Route handlers (force-dynamic, private cache)
     │   │   ├── dashboard/
     │   │   ├── expenses/
     │   │   ├── incomes/
     │   │   ├── budgets/
+    │   │   ├── employees/     # GET list + POST; [id] GET/PATCH/DELETE
+    │   │   ├── salary-records/# GET list + POST; [id] GET/PATCH/DELETE
     │   │   ├── labels/
     │   │   └── upload/
     │   ├── sign-in/           # Clerk SignIn widget (PWA safe-area aware)
     │   └── layout.tsx         # Root: ClerkProvider + ReactQueryProvider + PWA
     ├── components/
-    │   ├── auth-guard.tsx     # Session watchdog — clears cache, shows overlay, redirects
+    │   ├── auth-guard.tsx           # Session watchdog — clears cache, shows overlay, redirects
     │   ├── navigation-progress.tsx  # Top-bar progress bar on every link tap
     │   ├── offline-indicator.tsx    # Offline / back-online pill
     │   ├── mobile-bottom-nav.tsx    # Optimistic active state, safe-area-aware
-    │   ├── nav-link.tsx             # Optimistic active state (desktop)
+    │   ├── employee-form.tsx        # Create / edit employee
+    │   ├── employees-list.tsx       # Desktop table + mobile cards + edit/delete dialogs
+    │   ├── employees-page-client.tsx# Search input + Add Employee button
+    │   ├── salary-record-form.tsx   # Create / edit salary record (month/year locked on edit)
+    │   ├── salary-records-list.tsx  # Desktop table + mobile cards + edit/delete dialogs
+    │   ├── salary-records-page-client.tsx # Filters + Record Salary button
     │   ├── pwa-install-prompt.tsx   # Android native prompt + iOS step-by-step guide
     │   └── ui/                      # shadcn/ui base components
     ├── hooks/
-    │   ├── use-expenses.ts    # UnauthorizedError on 401
-    │   ├── use-incomes.ts     # UnauthorizedError on 401
-    │   ├── use-dashboard.ts   # UnauthorizedError on 401
+    │   ├── use-expenses.ts        # UnauthorizedError on 401
+    │   ├── use-incomes.ts         # UnauthorizedError on 401
+    │   ├── use-dashboard.ts       # UnauthorizedError on 401
+    │   ├── use-employees.ts       # CRUD mutations + list query
+    │   ├── use-salary-records.ts  # CRUD mutations + list query; invalidates expenses + dashboard
     │   └── use-online-status.ts
     └── lib/
         ├── db.ts              # Prisma client (singleton)
@@ -204,12 +232,13 @@ softnova-wallet/
 
 ## Database Schema
 
-### Key models
+### Models
 
 **Category** — unified for expenses and incomes
 - `type: EXPENSE | INCOME`
 - `name`, `icon`, `color`, `isDefault`
 - Indexed on `[type]` and `[type, name]`
+- Default categories: Office Supplies, Travel, Software/Subscriptions, Marketing, Utilities, Meals, Equipment, **Salary**, Other
 
 **Expense**
 - `amount`, `description?`, `date`, `payee`, `categoryId`
@@ -224,7 +253,67 @@ softnova-wallet/
 - `amount`, `period (weekly|monthly|yearly)`, `categoryId?`
 - Unique on `[period, categoryId, userId]`
 
+**Employee**
+- `name`, `phone?`, `email?`, `designation`, `profileImage?`, `isActive`
+- Indexed on `[isActive]`, `[name]`
+- One employee can have many `SalaryRecord`s
+
+**SalaryRecord**
+- `employeeId`, `month (1–12)`, `year`, `amount`, `paymentDate`, `remarks?`
+- `expenseId?` — links to auto-created Expense in the Salary category
+- `userId`, `userName` — who recorded the payment
+- **Unique on `[employeeId, month, year]`** — enforces one salary per employee per month
+- Indexed on `[employeeId]`, `[userId]`, `[year, month]`
+- Cascade deletes when parent Employee is deleted
+
 **Label** · **ExpenseLabel** (many-to-many join)
+
+### Salary → Expense Integration
+
+When a salary record is created, a Prisma transaction atomically:
+1. Creates an `Expense` with `categoryId: "salary"`, `payee: "Softnova Digital"`, and `description: "Salary – {Name} ({Month} {Year})"`
+2. Stores the `expenseId` on the `SalaryRecord`
+
+On update, the linked expense amount and date are synced in the same transaction.
+On delete, the linked expense is removed first to prevent orphans.
+
+---
+
+## API Reference
+
+### Employees
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/employees` | List employees. Query: `search`, `activeOnly`, `page`, `limit` |
+| POST | `/api/employees` | Create employee |
+| GET | `/api/employees/:id` | Get employee with last 12 salary records |
+| PATCH | `/api/employees/:id` | Update employee fields |
+| DELETE | `/api/employees/:id` | Delete employee + all salary records + linked expenses |
+
+### Salary Records
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/salary-records` | List records. Query: `employeeId`, `month`, `year`, `page`, `limit` |
+| POST | `/api/salary-records` | Create record + linked expense (409 if duplicate month) |
+| GET | `/api/salary-records/:id` | Get single record |
+| PATCH | `/api/salary-records/:id` | Update `amount`, `paymentDate`, `remarks` — syncs expense |
+| DELETE | `/api/salary-records/:id` | Delete record + linked expense |
+
+### Expenses
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/expenses` | List with filters: `categoryId`, `payee`, `startDate`, `endDate`, `search`, `page`, `limit` |
+| POST | `/api/expenses` | Create expense |
+| GET | `/api/expenses/:id` | Get single expense |
+| PATCH | `/api/expenses/:id` | Update expense (handles Cloudinary receipt replacement) |
+| DELETE | `/api/expenses/:id` | Delete expense + Cloudinary receipt |
+
+### Incomes / Budgets / Labels / Categories
+
+Standard CRUD routes following the same pattern as Expenses. See `src/app/api/` for full implementations.
 
 ---
 
@@ -234,8 +323,9 @@ softnova-wallet/
 |---|---|
 | Authentication | Clerk middleware, `auth.protect()` on all non-public routes |
 | API auth | Every route handler calls `auth()` and returns 401 if no `userId` |
-| User isolation | All DB queries filter by `userId` |
+| User isolation | All DB queries scoped to authenticated user |
 | Input validation | Zod schemas on all POST/PATCH endpoints |
+| Duplicate prevention | `@@unique` DB constraint + 409 API response for salary conflicts |
 | SQL injection | Prisma ORM (parameterised queries) |
 | Sign-up | Disabled — single-tenant app, sign-up route redirects to sign-in |
 | Security headers | HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy |
@@ -262,7 +352,8 @@ vercel --prod
 
 - [ ] All environment variables set in Vercel dashboard (Production + Preview)
 - [ ] `DATABASE_URL` points to production database with pooler URL
-- [ ] Run `pnpm db:migrate` against production DB before first deploy
+- [ ] Run `pnpm db:push` against production DB to apply schema changes
+- [ ] Run `pnpm db:seed` to ensure the Salary category exists
 - [ ] Verify Clerk callback URLs in Clerk dashboard match the production domain
 
 ### Post-deploy verification
@@ -271,6 +362,9 @@ vercel --prod
 - [ ] Dashboard, expenses, incomes, budgets all load
 - [ ] Add / edit / delete operations persist correctly
 - [ ] Receipt upload succeeds (Cloudinary)
+- [ ] Employees page: create, edit, deactivate, delete
+- [ ] Salary Records page: record salary, confirm linked expense appears in Expenses
+- [ ] Duplicate salary for same employee + month returns an error (not a second record)
 - [ ] PWA install prompt appears on Android
 - [ ] iOS "Add to Home Screen" guide shows on Safari
 - [ ] App works after installing to home screen (standalone mode)
@@ -297,16 +391,24 @@ pnpm db:generate
 - Cloudinary credentials must be set server-side (not `NEXT_PUBLIC_*`)
 - Allowed types: `jpeg`, `png`, `gif`, `pdf` · Max size: 5 MB
 
+**Salary record creation returns 409**
+- A salary record for that employee and month already exists
+- Edit the existing record or delete it first, then recreate
+
+**Salary expense not appearing in dashboard**
+- Confirm the `salary` category was seeded (`pnpm db:seed` or run the upsert script)
+- The linked expense uses `categoryId: "salary"` and `payee: "Softnova Digital"`
+
 **PWA not installing on Android**
 - The app must be served over HTTPS
 - Lighthouse PWA audit must pass (check for manifest + SW errors)
 
 ---
 
-## License 
+## License
 
 Private — Softnova Digital
 
 ---
 
-*Built by Softnova Digital · Last updated 31 May 2026*
+*Built by Softnova Digital · Last updated 7 June 2026*
