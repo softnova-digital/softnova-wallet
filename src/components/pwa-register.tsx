@@ -18,9 +18,14 @@ export function PWARegister() {
 
 async function registerServiceWorker() {
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
-    });
+    // Include the build timestamp in the SW URL. A new URL on each deploy forces
+    // the browser to install a fresh service worker, which then activates with a
+    // new cache name and prunes all caches from previous deployments.
+    const buildTime = process.env.NEXT_PUBLIC_BUILD_TIME || "dev";
+    const registration = await navigator.serviceWorker.register(
+      `/sw.js?v=${encodeURIComponent(buildTime)}`,
+      { scope: "/" }
+    );
 
     console.log(
       "[PWA] Service Worker registered successfully:",

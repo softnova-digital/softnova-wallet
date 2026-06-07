@@ -1,11 +1,15 @@
 // Service Worker — Softnova Wallet PWA
 // Strategy:
-//   /_next/static/*  → Cache-first  (immutable hashed assets)
+//   /_next/static/*  → Cache-first  (immutable content-hashed assets)
 //   /api/*           → Network-only → offline JSON 503 on failure
-//   pages/documents  → Network-first → cached page fallback
-//   other same-origin → Network-first → cached fallback
-
-const CACHE = "softnova-wallet-v3";
+//   pages/documents  → Network-first → precached shell fallback (no live caching)
+//   other same-origin → Network-first → no caching while online
+//
+// The registration URL includes ?v=<build-timestamp> (set in pwa-register.tsx).
+// A new URL on each deploy means a new SW is installed with a new CACHE name,
+// so the activate step always finds and deletes the previous build's cache.
+const BUILD_ID = new URL(self.location.href).searchParams.get("v") || "dev";
+const CACHE = `softnova-wallet-${BUILD_ID}`;
 
 const PRECACHE = [
   "/",
@@ -100,22 +104,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ── Pages and everything else: network-first, cache fallback ───────────
+  // ── Pages and everything else: network-first, offline shell fallback ────
+  // IMPORTANT: do NOT write page HTML into the cache while online.
+  // Next.js page shells reference content-hashed JS/CSS chunks. Caching them
+  // means a deploy with new chunk hashes will serve stale HTML pointing at
+  // URLs that no longer exist on the CDN, showing the old version of the app
+  // until a hard reload. The precached "/" shell is the only document fallback
+  // needed for offline navigation.
   event.respondWith(
     fetch(request)
-      .then((response) => {
-        // Cache successful same-origin responses
-        if (response.ok && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
+      .then((response) => response)
       .catch(async () => {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-
-        // For document navigations, fall back to the cached shell
+        // For document navigations fall back to the precached shell
         if (request.destination === "document") {
           const shell = await caches.match("/");
           if (shell) return shell;

@@ -26,7 +26,7 @@ export function AddExpenseButton({ categories, labels }: AddExpenseButtonProps) 
       <DialogTrigger asChild>
         <Button className="btn-press shrink-0 min-h-[44px]">
           <Plus className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Add Expense</span>
+          <span className="hidden sm:inline">New Expense</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">

@@ -2,7 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  
+
+  // Expose a build-time constant so the SW registration URL changes on every deploy.
+  // A different URL = browser installs a fresh SW = new cache name = old cache pruned.
+  env: {
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
+
   // Production output configuration for Vercel
   output: "standalone",
   
@@ -80,16 +86,9 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Cache API responses with shorter TTL
-      {
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=10, stale-while-revalidate=60",
-          },
-        ],
-      },
+      // API routes set their own Cache-Control: private, no-store in each handler.
+      // Do NOT set a config-level header here — a "public" directive would let
+      // Vercel's CDN cache user-specific financial data across requests.
       // Service Worker headers
       {
         source: "/sw.js",
