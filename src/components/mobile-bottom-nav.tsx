@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, BanknoteArrowDown, BanknoteArrowUp, Settings } from "lucide-react";
+import { LayoutDashboard, BanknoteArrowDown, BanknoteArrowUp, Settings, Users, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expenses", label: "Expenses", icon: BanknoteArrowUp },
-  { href: "/incomes", label: "Incomes", icon: BanknoteArrowDown },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/",               label: "Dashboard", icon: LayoutDashboard },
+  { href: "/expenses",       label: "Expenses",  icon: BanknoteArrowUp },
+  { href: "/incomes",        label: "Incomes",   icon: BanknoteArrowDown },
+  { href: "/employees",      label: "Staff",     icon: Users },
+  { href: "/salary-records", label: "Salary",    icon: Banknote },
+  { href: "/settings",       label: "Settings",  icon: Settings },
 ];
 
 export function MobileBottomNav() {

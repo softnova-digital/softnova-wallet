@@ -11,6 +11,8 @@ import {
   PiggyBank,
   Settings,
   X,
+  Users,
+  Banknote,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -29,18 +31,22 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ROUTE_PREFETCH: Record<string, { key: unknown[]; url: string }> = {
-  "/":         { key: ["dashboard", "all", undefined, undefined], url: "/api/dashboard?range=all" },
-  "/expenses": { key: ["expenses", ""],                           url: "/api/expenses" },
-  "/budgets":  { key: ["budgets"],                                url: "/api/budgets" },
-  "/incomes":  { key: ["incomes", ""],                            url: "/api/incomes" },
+  "/":               { key: ["dashboard", "all", undefined, undefined], url: "/api/dashboard?range=all" },
+  "/expenses":       { key: ["expenses", ""],                           url: "/api/expenses" },
+  "/budgets":        { key: ["budgets"],                                url: "/api/budgets" },
+  "/incomes":        { key: ["incomes", ""],                            url: "/api/incomes" },
+  "/employees":      { key: ["employees", "", undefined],               url: "/api/employees" },
+  "/salary-records": { key: ["salary-records", ""],                     url: "/api/salary-records" },
 };
 
 const navItems = [
-  { href: "/",         label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expenses", label: "Expenses",  icon: TrendingDown },
-  { href: "/incomes",  label: "Incomes",   icon: TrendingUp },
-  { href: "/budgets",  label: "Budgets",   icon: PiggyBank },
-  { href: "/settings", label: "Settings",  icon: Settings },
+  { href: "/",               label: "Dashboard",      icon: LayoutDashboard },
+  { href: "/expenses",       label: "Expenses",       icon: TrendingDown },
+  { href: "/incomes",        label: "Incomes",        icon: TrendingUp },
+  { href: "/budgets",        label: "Budgets",        icon: PiggyBank },
+  { href: "/employees",      label: "Employees",      icon: Users },
+  { href: "/salary-records", label: "Salary Records", icon: Banknote },
+  { href: "/settings",       label: "Settings",       icon: Settings },
 ];
 
 interface AppSidebarProps {

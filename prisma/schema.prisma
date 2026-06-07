@@ -104,3 +104,40 @@ model Budget {
   @@unique([period, categoryId, userId])
   @@index([userId])
 }
+
+model Employee {
+  id            String         @id @default(cuid())
+  name          String
+  phone         String?
+  email         String?
+  designation   String
+  profileImage  String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  salaryRecords SalaryRecord[]
+
+  @@index([isActive])
+  @@index([name])
+}
+
+model SalaryRecord {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month       Int // 1-12
+  year        Int // e.g. 2025
+  amount      Float
+  paymentDate DateTime
+  remarks     String?
+  expenseId   String?   @unique // Linked expense for financial integration
+  userId      String // Who recorded this salary
+  userName    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([employeeId, month, year]) // One salary record per employee per month
+  @@index([employeeId])
+  @@index([userId])
+  @@index([year, month])
+}

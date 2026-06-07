@@ -106,3 +106,52 @@ export interface BudgetFormData {
   period: "weekly" | "monthly" | "yearly";
   categoryId?: string;
 }
+
+export interface Employee {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  designation: string;
+  profileImage: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count?: {
+    salaryRecords?: number;
+  };
+}
+
+export interface SalaryRecord {
+  id: string;
+  employeeId: string;
+  employee?: Employee;
+  month: number;
+  year: number;
+  amount: number;
+  paymentDate: Date;
+  remarks: string | null;
+  expenseId: string | null;
+  userId: string;
+  userName: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface EmployeeFormData {
+  name: string;
+  phone?: string;
+  email?: string;
+  designation: string;
+  profileImage?: string;
+  isActive: boolean;
+}
+
+export interface SalaryRecordFormData {
+  employeeId: string;
+  month: number;
+  year: number;
+  amount: number;
+  paymentDate: Date;
+  remarks?: string;
+}

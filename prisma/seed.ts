@@ -10,6 +10,7 @@ const defaultCategories = [
   { name: "Utilities", icon: "zap", color: "#F39C12" },
   { name: "Meals", icon: "utensils", color: "#1ABC9C" },
   { name: "Equipment", icon: "laptop", color: "#34495E" },
+  { name: "Salary", icon: "users", color: "#8E44AD" },
   { name: "Other", icon: "folder", color: "#95A5A6" },
 ];
 
