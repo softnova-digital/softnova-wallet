@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import {
   Edit,
@@ -137,7 +137,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                 const isNewMonth = monthLabel !== lastMonth;
                 lastMonth = monthLabel;
                 return (
-                  <>
+                  <React.Fragment key={expense.id}>
                     {isNewMonth && (
                       <TableRow
                         key={`month-${monthLabel}`}
@@ -268,7 +268,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  </>
+                  </React.Fragment>
                 );
               });
             })()}

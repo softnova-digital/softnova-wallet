@@ -35,8 +35,7 @@ export default async function DashboardLayout({
 
         {/* Page content */}
         <div
-          className="grid-background flex-1 min-h-0"
-          style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+          className="grid-background flex-1 min-h-0 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0"
         >
           <div className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto animate-fade-in">
             {children}
