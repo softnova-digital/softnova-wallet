@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { MobileBottomNavWrapper } from "@/components/mobile-bottom-nav-wrapper";
 import { Logo } from "@/components/logo";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 
 export default async function DashboardLayout({
   children,
@@ -29,7 +30,8 @@ export default async function DashboardLayout({
 
       <SidebarInset>
         {/* Mobile-only sticky header */}
-        <header className="md:hidden flex h-14 shrink-0 items-center justify-center border-b border-border/60 bg-background/90 backdrop-blur-xl sticky top-0 z-10 px-4">
+        <header className="md:hidden relative flex h-14 shrink-0 items-center justify-center border-b border-border/60 bg-background/90 backdrop-blur-xl sticky top-0 z-10 px-4">
+          <MobileMenuTrigger />
           <Logo variant="mobile" />
         </header>
 

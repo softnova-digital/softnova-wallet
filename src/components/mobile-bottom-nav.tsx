@@ -7,9 +7,7 @@ import {
   LayoutDashboard,
   BanknoteArrowDown,
   BanknoteArrowUp,
-  Settings,
   Users,
-  Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +16,6 @@ const navItems = [
   { href: "/expenses",       label: "Expenses", icon: BanknoteArrowUp },
   { href: "/incomes",        label: "Incomes",  icon: BanknoteArrowDown },
   { href: "/employees",      label: "Staff",    icon: Users },
-  { href: "/salary-records", label: "Salary",   icon: Banknote },
-  { href: "/settings",       label: "Settings", icon: Settings },
 ];
 
 export function MobileBottomNav() {
@@ -70,13 +66,7 @@ export function MobileBottomNav() {
               )}
               style={{ touchAction: "manipulation" }}
             >
-              {/* Active pill background */}
-              {showActive && (
-                <span
-                  className="absolute inset-0 rounded-2xl bg-primary/10"
-                  style={{ transition: "opacity 100ms ease" }}
-                />
-              )}
+
 
               <Icon
                 className={cn(
