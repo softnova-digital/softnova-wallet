@@ -322,8 +322,8 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-xl">
-            <SheetHeader className="pb-4">
+          <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-xl px-6 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+            <SheetHeader className="px-0 pb-4">
               <SheetTitle>Filter Expenses</SheetTitle>
             </SheetHeader>
             {filterContent}
