@@ -1,13 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { PieChart as PieChartIcon } from "lucide-react";
 
 interface ChartData {
@@ -38,7 +32,9 @@ export function SpendingChart({ data }: SpendingChartProps) {
                 <PieChartIcon className="h-8 w-8 text-muted-foreground/50" />
               </div>
               <p>No spending data yet</p>
-              <p className="text-sm text-muted-foreground/70 mt-1">Add expenses to see your spending breakdown</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">
+                Add expenses to see your spending breakdown
+              </p>
             </div>
           </div>
         </CardContent>
@@ -47,7 +43,10 @@ export function SpendingChart({ data }: SpendingChartProps) {
   }
 
   return (
-    <Card className="animate-fade-in-up overflow-hidden" style={{ animationDelay: "50ms" }}>
+    <Card
+      className="animate-fade-in-up overflow-hidden"
+      style={{ animationDelay: "50ms" }}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PieChartIcon className="h-5 w-5 text-primary" />
@@ -55,9 +54,9 @@ export function SpendingChart({ data }: SpendingChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-4 min-w-0">
+        <div className="flex flex-col min-w-0">
           {/* Chart — fixed height so it never competes with the legend */}
-          <div className="h-[210px] min-w-0">
+          <div className="h-[200px] min-w-0">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
@@ -77,7 +76,9 @@ export function SpendingChart({ data }: SpendingChartProps) {
                       key={`cell-${index}`}
                       fill={entry.color}
                       className="transition-opacity duration-150 hover:opacity-80"
-                      style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
+                      style={{
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                      }}
                     />
                   ))}
                 </Pie>
@@ -113,7 +114,10 @@ export function SpendingChart({ data }: SpendingChartProps) {
           {/* Custom legend — lives outside the fixed-height chart box */}
           <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 pt-1 pb-1">
             {data.map((entry, index) => (
-              <div key={`legend-${index}`} className="flex items-center gap-1.5 min-w-0">
+              <div
+                key={`legend-${index}`}
+                className="flex items-center gap-1.5 min-w-0"
+              >
                 <span
                   className="shrink-0 w-2 h-2 rounded-full"
                   style={{ backgroundColor: entry.color }}
