@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Edit, Trash2, Receipt, MoreHorizontal, ChevronRight } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Receipt,
+  MoreHorizontal,
+  ChevronRight,
+} from "lucide-react";
 import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
 
 import {
@@ -40,10 +46,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { ExpenseForm } from "@/components/expense-form";
 import { getCategoryIcon } from "@/lib/category-icons";
-import { 
-  LoadingCard, 
-  LoadingSpinner 
-} from "@/components/ui/loading-spinner";
+import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Category, Label, Expense } from "@/types";
 
 interface ExpensesListProps {
@@ -76,7 +79,9 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 text-center text-muted-foreground">
-          <p className="text-lg font-medium text-destructive">Failed to load expenses</p>
+          <p className="text-lg font-medium text-destructive">
+            Failed to load expenses
+          </p>
           <p className="text-sm mt-1">Please try again later</p>
         </CardContent>
       </Card>
@@ -97,6 +102,16 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     );
   }
 
+  // Pre-compute totals per month for the section headers
+  const monthlyTotals = expenses.reduce<Record<string, number>>(
+    (acc, expense) => {
+      const key = format(new Date(expense.date), "MMMM yyyy");
+      acc[key] = (acc[key] || 0) + expense.amount;
+      return acc;
+    },
+    {},
+  );
+
   return (
     <>
       {/* Desktop Table View */}
@@ -104,116 +119,159 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-
-              <TableHead>Recorded By</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="pl-6 pr-4">Date</TableHead>
+              <TableHead className="px-4">Description</TableHead>
+              <TableHead className="px-4">Category</TableHead>
+              <TableHead className="text-right px-4">Amount</TableHead>
+              <TableHead className="w-[60px] pr-6"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((expense, index) => {
-              const Icon = getCategoryIcon(expense.category?.icon || "folder");
-              return (
-                <TableRow 
-                  key={expense.id} 
-                  className="table-row-animate animate-fade-in-up"
-                  style={{ animationDelay: `${index * 25}ms` }}
-                >
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{expense.description}</p>
-                      {expense.labels && expense.labels.length > 0 && (
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {expense.labels.slice(0, 3).map(({ label }) => (
-                            <Badge
-                              key={label.id}
-                              variant="outline"
-                              className="text-xs transition-transform hover:scale-105"
-                              style={{
-                                borderColor: label.color,
-                                color: label.color,
-                              }}
-                            >
-                              {label.name}
-                            </Badge>
-                          ))}
-                          {expense.labels.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{expense.labels.length - 3}
-                            </Badge>
+            {(() => {
+              let lastMonth = "";
+              return expenses.map((expense, index) => {
+                const Icon = getCategoryIcon(
+                  expense.category?.icon || "folder",
+                );
+                const monthLabel = format(new Date(expense.date), "MMMM yyyy");
+                const isNewMonth = monthLabel !== lastMonth;
+                lastMonth = monthLabel;
+                return (
+                  <>
+                    {isNewMonth && (
+                      <TableRow
+                        key={`month-${monthLabel}`}
+                        className="hover:bg-transparent border-t border-border/40 first:border-t-0"
+                      >
+                        <TableCell
+                          colSpan={5}
+                          className="px-6 py-2.5 bg-accent"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs uppercase tracking-widest text-destructive">
+                              {monthLabel}
+                            </span>
+                            <span className="text-xs text-destructive tabular-nums">
+                              ₹
+                              {(monthlyTotals[monthLabel] || 0).toLocaleString(
+                                "en-IN",
+                                { minimumFractionDigits: 2 },
+                              )}
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow
+                      key={expense.id}
+                      className="table-row-animate animate-fade-in-up"
+                      style={{ animationDelay: `${index * 25}ms` }}
+                    >
+                      <TableCell className="text-muted-foreground pl-6 pr-4">
+                        {format(new Date(expense.date), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div>
+                          <p className="font-medium">{expense.description}</p>
+                          {expense.labels && expense.labels.length > 0 && (
+                            <div className="flex gap-1 mt-1 flex-wrap">
+                              {expense.labels.slice(0, 3).map(({ label }) => (
+                                <Badge
+                                  key={label.id}
+                                  variant="outline"
+                                  className="text-xs transition-transform hover:scale-105"
+                                  style={{
+                                    borderColor: label.color,
+                                    color: label.color,
+                                  }}
+                                >
+                                  {label.name}
+                                </Badge>
+                              ))}
+                              {expense.labels.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{expense.labels.length - 3}
+                                </Badge>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="p-1.5 rounded-lg transition-transform hover:scale-110"
-                        style={{
-                          backgroundColor: (expense.category?.color || "#2ECC71") + "20",
-                        }}
-                      >
-                        <Icon
-                          className="h-4 w-4"
-                          style={{ color: expense.category?.color || "#2ECC71" }}
-                        />
-                      </div>
-                      <span className="text-sm">{expense.category?.name}</span>
-                    </div>
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">{expense.userName}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(expense.date), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    ₹{expense.amount.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover:bg-accent">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="animate-scale-in">
-                        <DropdownMenuItem onClick={() => setEditExpense(expense)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        {expense.receiptUrl && (
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={expense.receiptUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="p-1.5 rounded-lg transition-transform hover:scale-110"
+                            style={{
+                              backgroundColor:
+                                (expense.category?.color || "#2ECC71") + "20",
+                            }}
+                          >
+                            <Icon
+                              className="h-4 w-4"
+                              style={{
+                                color: expense.category?.color || "#2ECC71",
+                              }}
+                            />
+                          </div>
+                          <span className="text-sm">
+                            {expense.category?.name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold px-4">
+                        ₹
+                        {expense.amount.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                      <TableCell className="pr-6">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="hover:bg-accent"
                             >
-                              <Receipt className="h-4 w-4 mr-2" />
-                              View Receipt
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setDeleteExpense(expense)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="animate-scale-in"
+                          >
+                            <DropdownMenuItem
+                              onClick={() => setEditExpense(expense)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            {expense.receiptUrl && (
+                              <DropdownMenuItem asChild>
+                                <a
+                                  href={expense.receiptUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Receipt className="h-4 w-4 mr-2" />
+                                  View Receipt
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteExpense(expense)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  </>
+                );
+              });
+            })()}
           </TableBody>
         </Table>
       </Card>
@@ -223,8 +281,8 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         {expenses.map((expense, index) => {
           const Icon = getCategoryIcon(expense.category?.icon || "folder");
           return (
-            <Card 
-              key={expense.id} 
+            <Card
+              key={expense.id}
               className="animate-fade-in-up hover-lift"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -234,7 +292,8 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                     <div
                       className="p-2 rounded-lg shrink-0"
                       style={{
-                        backgroundColor: (expense.category?.color || "#2ECC71") + "20",
+                        backgroundColor:
+                          (expense.category?.color || "#2ECC71") + "20",
                       }}
                     >
                       <Icon
@@ -243,10 +302,14 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{expense.description}</p>
+                      <p className="font-medium truncate">
+                        {expense.description}
+                      </p>
 
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span>{format(new Date(expense.date), "MMM d, yyyy")}</span>
+                        <span>
+                          {format(new Date(expense.date), "MMM d, yyyy")}
+                        </span>
                         <span>•</span>
                         <span>{expense.userName}</span>
                       </div>
@@ -271,18 +334,25 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold">
-                      ₹{expense.amount.toLocaleString("en-IN", {
+                      ₹
+                      {expense.amount.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                       })}
                     </p>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 px-2 mt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 mt-1"
+                        >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditExpense(expense)}>
+                        <DropdownMenuItem
+                          onClick={() => setEditExpense(expense)}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -335,13 +405,16 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteExpense} onOpenChange={() => setDeleteExpense(null)}>
+      <AlertDialog
+        open={!!deleteExpense}
+        onOpenChange={() => setDeleteExpense(null)}
+      >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Expense</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot be
-              undone.
+              Are you sure you want to delete this expense? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
