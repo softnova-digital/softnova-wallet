@@ -4,12 +4,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import { useCreateIncome, useUpdateIncome } from "@/hooks/use-incomes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Form,
@@ -38,7 +37,7 @@ import type { Category, Income } from "@/types";
 
 const incomeSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
-  description: z.string().optional(), // Description is now optional
+  description: z.string().optional(),
   date: z.date({ message: "Date is required" }),
   source: z.string().min(1, "Source is required"),
   categoryId: z.string().min(1, "Category is required"),
@@ -47,12 +46,20 @@ const incomeSchema = z.object({
 type IncomeFormValues = z.infer<typeof incomeSchema>;
 
 interface IncomeFormProps {
-  categories: Category[]; // Now uses unified Category type
+  categories: Category[];
   income?: Income;
   onSuccess?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
-export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
+export function IncomeForm({
+  categories,
+  income,
+  onSuccess,
+  onDelete,
+  isDeleting,
+}: IncomeFormProps) {
   const createIncome = useCreateIncome();
   const updateIncome = useUpdateIncome();
 
@@ -67,11 +74,14 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
     },
   });
 
+  const isSubmitting = createIncome.isPending || updateIncome.isPending;
+
   async function onSubmit(data: IncomeFormValues) {
     const incomeData = {
       ...data,
       amount: parseFloat(data.amount),
       date: data.date.toISOString(),
+      description: data.description?.trim() || undefined,
     };
 
     try {
@@ -80,7 +90,6 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
       } else {
         await createIncome.mutateAsync(incomeData);
       }
-      // Dialog closes AFTER refetch completes
       onSuccess?.();
     } catch (error) {
       console.error(error);
@@ -89,7 +98,8 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        {/* Row 1: Amount + Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -98,18 +108,7 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
               <FormItem>
                 <FormLabel>Amount (₹)</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      ₹
-                    </span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="pl-7"
-                      {...field}
-                    />
-                  </div>
+                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,16 +127,12 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
@@ -146,6 +141,9 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -156,6 +154,7 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
           />
         </div>
 
+        {/* Description — single-line input */}
         <FormField
           control={form.control}
           name="description"
@@ -163,77 +162,94 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Describe the income..."
-                  className="resize-none"
-                  {...field}
-                />
+                <Input placeholder="What was this income for?" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="source"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source</FormLabel>
+        {/* Source */}
+        <FormField
+          control={form.control}
+          name="source"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Source</FormLabel>
+              <FormControl>
+                <Input placeholder="Client name, company, etc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Category */}
+        <FormField
+          control={form.control}
+          name="categoryId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <Input placeholder="Client name, employer, etc." {...field} />
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  {categories.map((category) => {
+                    const Icon = getCategoryIcon(category.icon);
+                    return (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" style={{ color: category.color }} />
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map((category) => {
-                      const Icon = getCategoryIcon(category.icon);
-                      return (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              className="h-4 w-4"
-                              style={{ color: category.color }}
-                            />
-                            {category.name}
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing */}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isSubmitting}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Income
+                </>
+              )}
+            </Button>
+          )}
 
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
-          <Button 
-            type="submit" 
-            disabled={createIncome.isPending || updateIncome.isPending} 
-            className="btn-press w-full sm:w-auto min-h-[44px]"
+          {/* Update / Add */}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
           >
-            {(createIncome.isPending || updateIncome.isPending) ? (
-              <LoadingSpinner size="sm" text="Saving..." />
+            {isSubmitting ? (
+              <LoadingSpinner size="sm" text="Saving…" />
+            ) : income ? (
+              "Update Income"
             ) : (
-              income ? "Update Income" : "Add Income"
+              "Add Income"
             )}
           </Button>
         </div>
@@ -241,4 +257,3 @@ export function IncomeForm({ categories, income, onSuccess }: IncomeFormProps) {
     </Form>
   );
 }
-
