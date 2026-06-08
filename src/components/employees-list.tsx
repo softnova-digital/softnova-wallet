@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Users, UserCheck, UserX, Phone, Mail } from "lucide-react";
 import { useEmployees, useDeleteEmployee } from "@/hooks/use-employees";
 
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmployeeForm } from "@/components/employee-form";
+import { TablePagination } from "@/components/table-pagination";
 import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Employee } from "@/types";
 
@@ -41,6 +42,7 @@ export function EmployeesList() {
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
 
   const employees = data?.employees || [];
+  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteTarget) return;
@@ -65,7 +67,7 @@ export function EmployeesList() {
     );
   }
 
-  if (employees.length === 0) {
+  if (pagination ? pagination.total === 0 : employees.length === 0) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -202,6 +204,17 @@ export function EmployeesList() {
           ))}
         </Card>
       </div>
+
+      {/* ── Pagination ── */}
+      {pagination && (
+        <TablePagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
+          path="/employees"
+        />
+      )}
 
       {/* ── Edit Dialog ── */}
       <Dialog open={!!editEmployee} onOpenChange={() => setEditEmployee(null)}>

@@ -28,6 +28,9 @@ export function useSalaryRecords() {
       if (employeeId && employeeId !== "all") params.set("employeeId", employeeId);
       if (month && month !== "all") params.set("month", month);
       if (year && year !== "all") params.set("year", year);
+      const page = searchParams.get("page");
+      if (page) params.set("page", page);
+      params.set("limit", "20");
 
       const response = await fetch(`/api/salary-records?${params.toString()}`, {
         cache: "no-store",

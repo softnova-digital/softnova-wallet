@@ -30,6 +30,9 @@ export function useIncomes() {
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
       if (search) params.set("search", search);
+      const page = searchParams.get("page");
+      if (page) params.set("page", page);
+      params.set("limit", "20");
 
       const response = await fetch(`/api/incomes?${params.toString()}`, {
         cache: 'no-store'

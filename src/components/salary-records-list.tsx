@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Banknote } from "lucide-react";
 import { useSalaryRecords, useDeleteSalaryRecord } from "@/hooks/use-salary-records";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { SalaryRecordForm } from "@/components/salary-record-form";
+import { TablePagination } from "@/components/table-pagination";
 import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Employee, SalaryRecord } from "@/types";
 
@@ -51,6 +52,7 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
   const [deleteTarget, setDeleteTarget] = useState<SalaryRecord | null>(null);
 
   const records = data?.salaryRecords || [];
+  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteTarget) return;
@@ -75,7 +77,7 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
     );
   }
 
-  if (records.length === 0) {
+  if (pagination ? pagination.total === 0 : records.length === 0) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -195,6 +197,17 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
           ))}
         </Card>
       </div>
+
+      {/* ── Pagination ── */}
+      {pagination && (
+        <TablePagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
+          path="/salary"
+        />
+      )}
 
       {/* ── Edit Dialog ── */}
       <Dialog open={!!editRecord} onOpenChange={() => setEditRecord(null)}>

@@ -24,6 +24,9 @@ export function useEmployees(options?: { activeOnly?: boolean }) {
       const search = searchParams.get("search");
       if (search) params.set("search", search);
       if (options?.activeOnly) params.set("activeOnly", "true");
+      const page = searchParams.get("page");
+      if (page) params.set("page", page);
+      params.set("limit", "20");
 
       const response = await fetch(`/api/employees?${params.toString()}`, {
         cache: "no-store",

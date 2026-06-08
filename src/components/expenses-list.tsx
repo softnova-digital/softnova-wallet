@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExpenseForm } from "@/components/expense-form";
+import { TablePagination } from "@/components/table-pagination";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Category, Label, Expense } from "@/types";
@@ -48,6 +49,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
 
   const expenses = data?.expenses || [];
+  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteExpense) return;
@@ -76,7 +78,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     );
   }
 
-  if (expenses.length === 0) {
+  if (pagination ? pagination.total === 0 : expenses.length === 0) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -295,6 +297,17 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
           ));
         })()}
       </div>
+
+      {/* ── Pagination ── */}
+      {pagination && (
+        <TablePagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
+          path="/expenses"
+        />
+      )}
 
       {/* ── Edit / Detail Modal ── */}
       <Dialog open={!!editExpense} onOpenChange={() => setEditExpense(null)}>
