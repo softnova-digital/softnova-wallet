@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import {
   useCreateSalaryRecord,
   useUpdateSalaryRecord,
@@ -12,7 +12,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
@@ -73,6 +72,8 @@ interface SalaryRecordFormProps {
   salaryRecord?: SalaryRecord;
   defaultEmployeeId?: string;
   onSuccess?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
 export function SalaryRecordForm({
@@ -80,6 +81,8 @@ export function SalaryRecordForm({
   salaryRecord,
   defaultEmployeeId,
   onSuccess,
+  onDelete,
+  isDeleting,
 }: SalaryRecordFormProps) {
   const createSalaryRecord = useCreateSalaryRecord();
   const updateSalaryRecord = useUpdateSalaryRecord();
@@ -89,8 +92,7 @@ export function SalaryRecordForm({
   const form = useForm<SalaryRecordFormValues>({
     resolver: zodResolver(salaryRecordSchema),
     defaultValues: {
-      employeeId:
-        salaryRecord?.employeeId || defaultEmployeeId || "",
+      employeeId: salaryRecord?.employeeId || defaultEmployeeId || "",
       month: salaryRecord?.month || now.getMonth() + 1,
       year: salaryRecord?.year || now.getFullYear(),
       amount: salaryRecord?.amount?.toString() || "",
@@ -128,14 +130,14 @@ export function SalaryRecordForm({
     }
   }
 
-  const isPending =
-    createSalaryRecord.isPending || updateSalaryRecord.isPending;
-
-  const activeEmployees = employees.filter((e) => e.isActive);
+  const isSubmitting = createSalaryRecord.isPending || updateSalaryRecord.isPending;
+  const activeEmployees = employees.filter(
+    (e) => e.isActive || e.id === salaryRecord?.employeeId,
+  );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         {/* Employee — locked in edit mode */}
         <FormField
           control={form.control}
@@ -149,19 +151,14 @@ export function SalaryRecordForm({
                 disabled={isEditing}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select an employee" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {activeEmployees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
-                      <div className="flex flex-col">
-                        <span>{emp.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {emp.designation}
-                        </span>
-                      </div>
+                      {emp.name}
                     </SelectItem>
                   ))}
                   {activeEmployees.length === 0 && (
@@ -190,7 +187,7 @@ export function SalaryRecordForm({
                   disabled={isEditing}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -219,7 +216,7 @@ export function SalaryRecordForm({
                   disabled={isEditing}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -238,7 +235,7 @@ export function SalaryRecordForm({
         </div>
 
         {isEditing && (
-          <p className="text-xs text-muted-foreground -mt-2">
+          <p className="text-xs text-muted-foreground -mt-3">
             Employee, month, and year cannot be changed. Delete and recreate to change these.
           </p>
         )}
@@ -260,9 +257,6 @@ export function SalaryRecordForm({
                     {...field}
                   />
                 </FormControl>
-                <FormDescription className="text-xs">
-                  Amount can differ each month
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -280,7 +274,7 @@ export function SalaryRecordForm({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
+                          "w-full h-10 pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -309,6 +303,7 @@ export function SalaryRecordForm({
           />
         </div>
 
+        {/* Remarks — single-line input matching Description */}
         <FormField
           control={form.control}
           name="remarks"
@@ -316,9 +311,8 @@ export function SalaryRecordForm({
             <FormItem>
               <FormLabel>Remarks (optional)</FormLabel>
               <FormControl>
-                <Textarea
+                <Input
                   placeholder="Any notes about this salary payment..."
-                  rows={2}
                   {...field}
                 />
               </FormControl>
@@ -327,15 +321,37 @@ export function SalaryRecordForm({
           )}
         />
 
-        <div className="flex justify-end pt-2">
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing */}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isSubmitting}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Record
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Update / Add */}
           <Button
             type="submit"
-            disabled={isPending}
-            className="w-full sm:w-auto min-h-[44px]"
+            disabled={isSubmitting}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
           >
-            {isPending ? (
-              <LoadingSpinner size="sm" text="Saving..." />
-            ) : isEditing ? (
+            {isSubmitting ? (
+              <LoadingSpinner size="sm" text="Saving…" />
+            ) : salaryRecord ? (
               "Update Salary Record"
             ) : (
               "Record Salary"
