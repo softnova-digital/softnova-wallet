@@ -37,7 +37,7 @@ const SpendingChart = dynamic(
   () => import("@/components/spending-chart").then((mod) => ({ default: mod.SpendingChart })),
   {
     ssr: false,
-    loading: () => <div className="h-75 animate-pulse bg-accent/40 rounded-2xl" />,
+    loading: () => <div className="h-75 animate-pulse bg-accent/40 rounded-xl" />,
   }
 );
 

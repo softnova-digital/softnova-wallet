@@ -27,7 +27,7 @@ export function DashboardCard({
   return (
     <Card
       className={cn(
-        "card-interactive relative overflow-hidden gap-0 py-0",
+        "card-interactive rounded-xl relative overflow-hidden gap-0 py-0",
         "animate-fade-in-up",
         className
       )}
