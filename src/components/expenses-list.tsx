@@ -7,7 +7,6 @@ import {
   Trash2,
   Receipt,
   MoreHorizontal,
-  ChevronRight,
 } from "lucide-react";
 import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
 
@@ -276,113 +275,106 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         </Table>
       </Card>
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
-        {expenses.map((expense, index) => {
-          const Icon = getCategoryIcon(expense.category?.icon || "folder");
-          return (
-            <Card
-              key={expense.id}
-              className="animate-fade-in-up hover-lift"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
+      {/* Mobile List View — grouped by month */}
+      <div className="md:hidden space-y-4">
+        {(() => {
+          let lastMobileMonth = "";
+          const groups: { monthLabel: string; items: typeof expenses }[] = [];
+          expenses.forEach((expense) => {
+            const ml = format(new Date(expense.date), "MMMM yyyy");
+            if (ml !== lastMobileMonth) {
+              groups.push({ monthLabel: ml, items: [] });
+              lastMobileMonth = ml;
+            }
+            groups[groups.length - 1].items.push(expense);
+          });
+
+          return groups.map((group) => (
+            <Card key={group.monthLabel} className="animate-fade-in-up overflow-hidden gap-2 py-2">
+              {/* Month header */}
+              <div className="flex items-center justify-between px-4 py-2 bg-accent/30 border-b border-border/40">
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  {group.monthLabel}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground/80 tabular-nums">
+                  ₹{(monthlyTotals[group.monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* Entries */}
+              {group.items.map((expense, idx) => {
+                const Icon = getCategoryIcon(expense.category?.icon || "folder");
+                return (
+                  <div
+                    key={expense.id}
+                    className={`flex items-center gap-3 px-4 py-3 ${idx !== group.items.length - 1 ? "border-b border-border/30" : ""}`}
+                  >
+                    {/* Category icon */}
                     <div
                       className="p-2 rounded-lg shrink-0"
-                      style={{
-                        backgroundColor:
-                          (expense.category?.color || "#2ECC71") + "20",
-                      }}
+                      style={{ backgroundColor: (expense.category?.color || "#2ECC71") + "20" }}
                     >
                       <Icon
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         style={{ color: expense.category?.color || "#2ECC71" }}
                       />
                     </div>
+
+                    {/* Description + Category */}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">
+                      <p className="font-medium text-sm truncate leading-tight">
                         {expense.description}
                       </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {expense.category?.name}
+                      </p>
+                    </div>
 
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span>
-                          {format(new Date(expense.date), "MMM d, yyyy")}
-                        </span>
-                        <span>•</span>
-                        <span>{expense.userName}</span>
+                    {/* Amount + Date + Actions */}
+                    <div className="shrink-0 text-right flex items-center gap-1">
+                      <div>
+                        <p className="font-semibold text-sm tabular-nums">
+                          ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(new Date(expense.date), "MMM d")}
+                        </p>
                       </div>
-                      {expense.labels && expense.labels.length > 0 && (
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {expense.labels.slice(0, 2).map(({ label }) => (
-                            <Badge
-                              key={label.id}
-                              variant="outline"
-                              className="text-xs"
-                              style={{
-                                borderColor: label.color,
-                                color: label.color,
-                              }}
-                            >
-                              {label.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 shrink-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditExpense(expense)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          {expense.receiptUrl && (
+                            <DropdownMenuItem asChild>
+                              <a href={expense.receiptUrl} target="_blank" rel="noopener noreferrer">
+                                <Receipt className="h-4 w-4 mr-2" />
+                                View Receipt
+                              </a>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setDeleteExpense(expense)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-semibold">
-                      ₹
-                      {expense.amount.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 mt-1"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => setEditExpense(expense)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        {expense.receiptUrl && (
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={expense.receiptUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Receipt className="h-4 w-4 mr-2" />
-                              View Receipt
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeleteExpense(expense)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardContent>
+                );
+              })}
             </Card>
-          );
-        })}
+          ));
+        })()}
       </div>
 
       {/* Edit Dialog */}
