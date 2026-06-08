@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ROUTE_PREFETCH: Record<string, { key: unknown[]; url: string }> = {
-  "/":               { key: ["dashboard", "all", undefined, undefined], url: "/api/dashboard?range=all" },
+  "/":               { key: ["dashboard", "monthly", undefined, undefined], url: "/api/dashboard?range=monthly" },
   "/expenses":       { key: ["expenses", ""],                           url: "/api/expenses" },
   "/budgets":        { key: ["budgets"],                                url: "/api/budgets" },
   "/incomes":        { key: ["incomes", ""],                            url: "/api/incomes" },

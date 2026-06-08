@@ -48,7 +48,7 @@ interface UseDashboardOptions {
   to?: Date;
 }
 
-export function useDashboard({ range = "all", from, to }: UseDashboardOptions = {}) {
+export function useDashboard({ range = "monthly", from, to }: UseDashboardOptions = {}) {
   const queryParams = new URLSearchParams();
   if (range) queryParams.set("range", range);
   if (from) queryParams.set("from", from.toISOString());

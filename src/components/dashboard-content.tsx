@@ -54,7 +54,7 @@ function PageHeader() {
 }
 
 export const DashboardContent = memo(function DashboardContent() {
-  const [range, setRange]         = useState<DashboardTimeRange>("all");
+  const [range, setRange]         = useState<DashboardTimeRange>("monthly");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate]     = useState<Date | undefined>(undefined);
 
