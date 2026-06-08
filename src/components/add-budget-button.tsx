@@ -28,9 +28,9 @@ export function AddBudgetButton({ categories }: AddBudgetButtonProps) {
           <span className="hidden sm:inline">Add Budget</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Budget</DialogTitle>
+      <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+        <DialogHeader className="mb-1">
+          <DialogTitle className="text-xl font-semibold">New Budget</DialogTitle>
         </DialogHeader>
         <BudgetForm categories={categories} onSuccess={() => setOpen(false)} />
       </DialogContent>

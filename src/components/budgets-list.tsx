@@ -60,7 +60,12 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
 
   function handleDelete() {
     if (!deleteBudget) return;
-    deleteMutation.mutate(deleteBudget.id, { onSuccess: () => setDeleteBudget(null) });
+    deleteMutation.mutate(deleteBudget.id, {
+      onSuccess: () => {
+        setDeleteBudget(null);
+        setEditBudget(null);
+      },
+    });
   }
 
   if (budgets.length === 0) {
@@ -246,15 +251,17 @@ export function BudgetsList({ budgets, categories }: BudgetsListProps) {
 
       {/* Edit Dialog */}
       <Dialog open={!!editBudget} onOpenChange={() => setEditBudget(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Budget</DialogTitle>
+        <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+          <DialogHeader className="mb-1">
+            <DialogTitle className="text-xl font-semibold">Edit Budget</DialogTitle>
           </DialogHeader>
           {editBudget && (
             <BudgetForm
               categories={categories}
               budget={editBudget}
               onSuccess={() => setEditBudget(null)}
+              onDelete={() => setDeleteBudget(editBudget)}
+              isDeleting={deleteMutation.isPending}
             />
           )}
         </DialogContent>
