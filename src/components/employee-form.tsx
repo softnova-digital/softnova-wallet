@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Trash2 } from "lucide-react";
 import { useCreateEmployee, useUpdateEmployee } from "@/hooks/use-employees";
 
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,16 @@ type EmployeeFormValues = z.infer<typeof employeeSchema>;
 interface EmployeeFormProps {
   employee?: Employee;
   onSuccess?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
-export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
+export function EmployeeForm({
+  employee,
+  onSuccess,
+  onDelete,
+  isDeleting,
+}: EmployeeFormProps) {
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
 
@@ -85,11 +93,11 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
     }
   }
 
-  const isPending = createEmployee.isPending || updateEmployee.isPending;
+  const isSubmitting = createEmployee.isPending || updateEmployee.isPending;
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         <FormField
           control={form.control}
           name="name"
@@ -164,7 +172,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
                   defaultValue={String(field.value)}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -179,14 +187,36 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
           />
         </div>
 
-        <div className="flex justify-end pt-2">
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing */}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isSubmitting}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Employee
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Update / Add */}
           <Button
             type="submit"
-            disabled={isPending}
-            className="w-full sm:w-auto min-h-[44px]"
+            disabled={isSubmitting}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
           >
-            {isPending ? (
-              <LoadingSpinner size="sm" text="Saving..." />
+            {isSubmitting ? (
+              <LoadingSpinner size="sm" text="Saving…" />
             ) : employee ? (
               "Update Employee"
             ) : (
