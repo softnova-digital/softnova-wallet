@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Users, UserCheck, UserX, Phone, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Users, UserCheck, UserX, Phone, Mail } from "lucide-react";
 import { useEmployees, useDeleteEmployee } from "@/hooks/use-employees";
+import { useInfiniteEmployees } from "@/hooks/use-infinite-employees";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   Table,
@@ -36,13 +39,28 @@ import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Employee } from "@/types";
 
 export function EmployeesList() {
+  const isMobile = useIsMobile();
+
   const { data, isLoading, error } = useEmployees();
+
+  const {
+    data: infiniteData,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteEmployees({ enabled: isMobile });
+
+  const { ref: sentinelRef, isIntersecting } = useIntersectionObserver();
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const deleteEmployee = useDeleteEmployee();
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-
-  const employees = data?.employees || [];
-  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteTarget) return;
@@ -54,7 +72,14 @@ export function EmployeesList() {
     });
   }
 
-  if (isLoading) return <LoadingCard text="Loading employees..." />;
+  const employees = data?.employees || [];
+  const pagination = data?.pagination;
+
+  const mobileEmployees = infiniteData?.pages.flatMap((p) => p.employees) ?? employees;
+  const mobileHasMore = hasNextPage ?? false;
+  const mobilePagination = infiniteData?.pages.at(-1)?.pagination;
+
+  if (isLoading && !data) return <LoadingCard text="Loading employees..." />;
 
   if (error) {
     return (
@@ -67,7 +92,8 @@ export function EmployeesList() {
     );
   }
 
-  if (pagination ? pagination.total === 0 : employees.length === 0) {
+  const isEmpty = pagination ? pagination.total === 0 : employees.length === 0;
+  if (isEmpty) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -159,36 +185,40 @@ export function EmployeesList() {
         </Table>
       </Card>
 
-      {/* ── Mobile List View ── */}
+      {/* ── Desktop Pagination ── */}
+      <div className="hidden md:block">
+        {pagination && (
+          <TablePagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            path="/employees"
+          />
+        )}
+      </div>
+
+      {/* ── Mobile List View — infinite scroll ── */}
       <div className="md:hidden space-y-4">
         <Card className="animate-fade-in-up overflow-hidden gap-2 py-2">
-          {employees.map((employee, idx) => (
+          {mobileEmployees.map((employee, idx) => (
             <div
               key={employee.id}
               className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
-                idx !== employees.length - 1 ? "border-b border-border/30" : ""
+                idx !== mobileEmployees.length - 1 ? "border-b border-border/30" : ""
               }`}
               onClick={() => setEditEmployee(employee)}
             >
-              {/* Avatar Initial */}
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-sm font-semibold text-primary">
                   {employee.name.charAt(0).toUpperCase()}
                 </span>
               </div>
-
-              {/* Name + Designation */}
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm truncate leading-tight">
-                  {employee.name}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {employee.designation}
-                </p>
+                <p className="font-medium text-sm truncate leading-tight">{employee.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{employee.designation}</p>
               </div>
-
-              {/* Status Badge */}
-              <div className="shrink-0 text-right">
+              <div className="shrink-0">
                 <Badge
                   variant={employee.isActive ? "default" : "outline"}
                   className={
@@ -203,18 +233,21 @@ export function EmployeesList() {
             </div>
           ))}
         </Card>
-      </div>
 
-      {/* ── Pagination ── */}
-      {pagination && (
-        <TablePagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          limit={pagination.limit}
-          path="/employees"
-        />
-      )}
+        <div ref={sentinelRef} className="h-px" />
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!mobileHasMore && mobileEmployees.length > 0 && mobilePagination && mobilePagination.total > mobilePagination.limit && (
+          <p className="text-center text-xs text-muted-foreground py-3">
+            All {mobilePagination.total} employees loaded
+          </p>
+        )}
+      </div>
 
       {/* ── Edit Dialog ── */}
       <Dialog open={!!editEmployee} onOpenChange={() => setEditEmployee(null)}>
@@ -236,9 +269,7 @@ export function EmployeesList() {
       {/* ── Delete Confirmation ── */}
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
       >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
@@ -250,9 +281,7 @@ export function EmployeesList() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteEmployee.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteEmployee.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteEmployee.isPending}

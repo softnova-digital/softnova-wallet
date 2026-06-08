@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Receipt } from "lucide-react";
+import { Loader2, Receipt } from "lucide-react";
 import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
+import { useInfiniteExpenses } from "@/hooks/use-infinite-expenses";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   Table,
@@ -43,13 +46,33 @@ interface ExpensesListProps {
 }
 
 export function ExpensesList({ categories, labels }: ExpensesListProps) {
+  const isMobile = useIsMobile();
+
+  // Desktop: URL-based pagination
   const { data, isLoading: loading, error } = useExpenses();
+
+  // Mobile: infinite scroll (enabled once isMobile is confirmed)
+  const {
+    data: infiniteData,
+    isLoading: infiniteLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteExpenses({ enabled: isMobile });
+
+  // Sentinel for infinite scroll trigger
+  const { ref: sentinelRef, isIntersecting } = useIntersectionObserver();
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Dialog state
   const deleteExpenseMutation = useDeleteExpense();
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
-
-  const expenses = data?.expenses || [];
-  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteExpense) return;
@@ -61,7 +84,17 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     });
   }
 
-  if (loading) {
+  // Desktop data
+  const expenses = data?.expenses || [];
+  const pagination = data?.pagination;
+
+  // Mobile accumulated data — falls back to page-1 regular query while infinite loads
+  const mobileExpenses = infiniteData?.pages.flatMap((p) => p.expenses) ?? expenses;
+  const mobileHasMore = hasNextPage ?? false;
+  const mobilePagination = infiniteData?.pages.at(-1)?.pagination;
+
+  // Loading: initial render before any data
+  if (loading && !data) {
     return <LoadingCard text="Loading expenses..." />;
   }
 
@@ -69,16 +102,15 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 text-center text-muted-foreground">
-          <p className="text-lg font-medium text-destructive">
-            Failed to load expenses
-          </p>
+          <p className="text-lg font-medium text-destructive">Failed to load expenses</p>
           <p className="text-sm mt-1">Please try again later</p>
         </CardContent>
       </Card>
     );
   }
 
-  if (pagination ? pagination.total === 0 : expenses.length === 0) {
+  const isEmpty = pagination ? pagination.total === 0 : expenses.length === 0;
+  if (isEmpty) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -92,15 +124,34 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     );
   }
 
-  // Pre-compute totals per month for the section headers
-  const monthlyTotals = expenses.reduce<Record<string, number>>(
-    (acc, expense) => {
-      const key = format(new Date(expense.date), "MMMM yyyy");
-      acc[key] = (acc[key] || 0) + expense.amount;
-      return acc;
-    },
-    {},
-  );
+  // Desktop monthly totals (current page only)
+  const monthlyTotals = expenses.reduce<Record<string, number>>((acc, e) => {
+    const key = format(new Date(e.date), "MMMM yyyy");
+    acc[key] = (acc[key] || 0) + e.amount;
+    return acc;
+  }, {});
+
+  // Mobile monthly totals (all accumulated pages)
+  const mobileMonthlyTotals = mobileExpenses.reduce<Record<string, number>>((acc, e) => {
+    const key = format(new Date(e.date), "MMMM yyyy");
+    acc[key] = (acc[key] || 0) + e.amount;
+    return acc;
+  }, {});
+
+  // Group mobile expenses by month
+  const mobileGroups = (() => {
+    let lastMonth = "";
+    const groups: { monthLabel: string; items: Expense[] }[] = [];
+    mobileExpenses.forEach((expense) => {
+      const ml = format(new Date(expense.date), "MMMM yyyy");
+      if (ml !== lastMonth) {
+        groups.push({ monthLabel: ml, items: [] });
+        lastMonth = ml;
+      }
+      groups[groups.length - 1].items.push(expense);
+    });
+    return groups;
+  })();
 
   return (
     <>
@@ -119,40 +170,27 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
             {(() => {
               let lastMonth = "";
               return expenses.map((expense, index) => {
-                const Icon = getCategoryIcon(
-                  expense.category?.icon || "folder",
-                );
+                const Icon = getCategoryIcon(expense.category?.icon || "folder");
                 const monthLabel = format(new Date(expense.date), "MMMM yyyy");
                 const isNewMonth = monthLabel !== lastMonth;
                 lastMonth = monthLabel;
                 return (
                   <React.Fragment key={expense.id}>
                     {isNewMonth && (
-                      <TableRow
-                        key={`month-${monthLabel}`}
-                        className="hover:bg-transparent border-t border-border/40 first:border-t-0"
-                      >
-                        <TableCell
-                          colSpan={4}
-                          className="px-6 py-2.5 bg-accent"
-                        >
+                      <TableRow className="hover:bg-transparent border-t border-border/40 first:border-t-0">
+                        <TableCell colSpan={4} className="px-6 py-2.5 bg-accent">
                           <div className="flex items-center justify-between">
                             <span className="text-xs uppercase tracking-widest text-destructive">
                               {monthLabel}
                             </span>
                             <span className="text-xs text-destructive tabular-nums">
-                              ₹
-                              {(monthlyTotals[monthLabel] || 0).toLocaleString(
-                                "en-IN",
-                                { minimumFractionDigits: 2 },
-                              )}
+                              ₹{(monthlyTotals[monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                         </TableCell>
                       </TableRow>
                     )}
                     <TableRow
-                      key={expense.id}
                       className="table-row-animate animate-fade-in-up cursor-pointer hover:bg-accent/40 transition-colors"
                       style={{ animationDelay: `${index * 25}ms` }}
                       onClick={() => setEditExpense(expense)}
@@ -170,10 +208,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                                   key={label.id}
                                   variant="outline"
                                   className="text-xs transition-transform hover:scale-105"
-                                  style={{
-                                    borderColor: label.color,
-                                    color: label.color,
-                                  }}
+                                  style={{ borderColor: label.color, color: label.color }}
                                 >
                                   {label.name}
                                 </Badge>
@@ -191,28 +226,15 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1.5 rounded-lg transition-transform hover:scale-110"
-                            style={{
-                              backgroundColor:
-                                (expense.category?.color || "#2ECC71") + "20",
-                            }}
+                            style={{ backgroundColor: (expense.category?.color || "#2ECC71") + "20" }}
                           >
-                            <Icon
-                              className="h-4 w-4"
-                              style={{
-                                color: expense.category?.color || "#2ECC71",
-                              }}
-                            />
+                            <Icon className="h-4 w-4" style={{ color: expense.category?.color || "#2ECC71" }} />
                           </div>
-                          <span className="text-sm">
-                            {expense.category?.name}
-                          </span>
+                          <span className="text-sm">{expense.category?.name}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-semibold px-4 pr-6">
-                        ₹
-                        {expense.amount.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                        ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
@@ -223,91 +245,84 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         </Table>
       </Card>
 
-      {/* ── Mobile List View — grouped by month ── */}
-      <div className="md:hidden space-y-4">
-        {(() => {
-          let lastMobileMonth = "";
-          const groups: { monthLabel: string; items: typeof expenses }[] = [];
-          expenses.forEach((expense) => {
-            const ml = format(new Date(expense.date), "MMMM yyyy");
-            if (ml !== lastMobileMonth) {
-              groups.push({ monthLabel: ml, items: [] });
-              lastMobileMonth = ml;
-            }
-            groups[groups.length - 1].items.push(expense);
-          });
-
-          return groups.map((group) => (
-            <Card key={group.monthLabel} className="animate-fade-in-up overflow-hidden gap-2 py-2">
-              {/* Month header */}
-              <div className="flex items-center justify-between px-4 py-2 bg-accent/30 border-b border-border/40">
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  {group.monthLabel}
-                </span>
-                <span className="text-xs font-semibold text-muted-foreground/80 tabular-nums">
-                  ₹{(monthlyTotals[group.monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-
-              {/* Entries */}
-              {group.items.map((expense, idx) => {
-                const Icon = getCategoryIcon(expense.category?.icon || "folder");
-                return (
-                  <div
-                    key={expense.id}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
-                      idx !== group.items.length - 1 ? "border-b border-border/30" : ""
-                    }`}
-                    onClick={() => setEditExpense(expense)}
-                  >
-                    {/* Category icon */}
-                    <div
-                      className="p-2 rounded-lg shrink-0"
-                      style={{ backgroundColor: (expense.category?.color || "#2ECC71") + "20" }}
-                    >
-                      <Icon
-                        className="h-4 w-4"
-                        style={{ color: expense.category?.color || "#2ECC71" }}
-                      />
-                    </div>
-
-                    {/* Description + Category */}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate leading-tight">
-                        {expense.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {expense.category?.name}
-                      </p>
-                    </div>
-
-                    {/* Amount + Date */}
-                    <div className="shrink-0 text-right">
-                      <p className="font-semibold text-sm tabular-nums">
-                        ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {format(new Date(expense.date), "MMM d")}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </Card>
-          ));
-        })()}
+      {/* ── Desktop Pagination ── */}
+      <div className="hidden md:block">
+        {pagination && (
+          <TablePagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            path="/expenses"
+          />
+        )}
       </div>
 
-      {/* ── Pagination ── */}
-      {pagination && (
-        <TablePagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          limit={pagination.limit}
-          path="/expenses"
-        />
-      )}
+      {/* ── Mobile List View — infinite scroll ── */}
+      <div className="md:hidden space-y-4">
+        {mobileGroups.map((group) => (
+          <Card key={group.monthLabel} className="animate-fade-in-up overflow-hidden gap-2 py-2">
+            {/* Month header */}
+            <div className="flex items-center justify-between px-4 py-2 bg-accent/30 border-b border-border/40">
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                {group.monthLabel}
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground/80 tabular-nums">
+                ₹{(mobileMonthlyTotals[group.monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {group.items.map((expense, idx) => {
+              const Icon = getCategoryIcon(expense.category?.icon || "folder");
+              return (
+                <div
+                  key={expense.id}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
+                    idx !== group.items.length - 1 ? "border-b border-border/30" : ""
+                  }`}
+                  onClick={() => setEditExpense(expense)}
+                >
+                  <div
+                    className="p-2 rounded-lg shrink-0"
+                    style={{ backgroundColor: (expense.category?.color || "#2ECC71") + "20" }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: expense.category?.color || "#2ECC71" }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate leading-tight">{expense.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{expense.category?.name}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-semibold text-sm tabular-nums">
+                      ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {format(new Date(expense.date), "MMM d")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        ))}
+
+        {/* Scroll sentinel — triggers next page fetch */}
+        <div ref={sentinelRef} className="h-px" />
+
+        {/* Loading indicator */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {/* End of list */}
+        {!mobileHasMore && mobileExpenses.length > 0 && mobilePagination && mobilePagination.total > mobilePagination.limit && (
+          <p className="text-center text-xs text-muted-foreground py-3">
+            All {mobilePagination.total} expenses loaded
+          </p>
+        )}
+      </div>
 
       {/* ── Edit / Detail Modal ── */}
       <Dialog open={!!editExpense} onOpenChange={() => setEditExpense(null)}>
@@ -315,7 +330,6 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
           <DialogHeader className="mb-1">
             <DialogTitle className="text-xl font-semibold">Edit Expense</DialogTitle>
           </DialogHeader>
-
           {editExpense && (
             <ExpenseForm
               categories={categories}
@@ -332,22 +346,17 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
       {/* ── Delete Confirmation ── */}
       <AlertDialog
         open={!!deleteExpense}
-        onOpenChange={(open) => {
-          if (!open) setDeleteExpense(null);
-        }}
+        onOpenChange={(open) => { if (!open) setDeleteExpense(null); }}
       >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Expense</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot
-              be undone.
+              Are you sure you want to delete this expense? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteExpenseMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteExpenseMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteExpenseMutation.isPending}

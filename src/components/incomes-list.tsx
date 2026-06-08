@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Wallet } from "lucide-react";
+import { Loader2, Wallet } from "lucide-react";
 import { useIncomes, useDeleteIncome } from "@/hooks/use-incomes";
+import { useInfiniteIncomes } from "@/hooks/use-infinite-incomes";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   Table,
@@ -41,13 +44,29 @@ interface IncomesListProps {
 }
 
 export function IncomesList({ categories }: IncomesListProps) {
+  const isMobile = useIsMobile();
+
   const { data, isLoading: loading, error } = useIncomes();
+
+  const {
+    data: infiniteData,
+    isLoading: infiniteLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteIncomes({ enabled: isMobile });
+
+  const { ref: sentinelRef, isIntersecting } = useIntersectionObserver();
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const deleteIncomeMutation = useDeleteIncome();
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteIncome, setDeleteIncome] = useState<Income | null>(null);
-
-  const incomes = data?.incomes || [];
-  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteIncome) return;
@@ -59,7 +78,14 @@ export function IncomesList({ categories }: IncomesListProps) {
     });
   }
 
-  if (loading) {
+  const incomes = data?.incomes || [];
+  const pagination = data?.pagination;
+
+  const mobileIncomes = infiniteData?.pages.flatMap((p) => p.incomes) ?? incomes;
+  const mobileHasMore = hasNextPage ?? false;
+  const mobilePagination = infiniteData?.pages.at(-1)?.pagination;
+
+  if (loading && !data) {
     return <LoadingCard text="Loading incomes..." />;
   }
 
@@ -74,7 +100,8 @@ export function IncomesList({ categories }: IncomesListProps) {
     );
   }
 
-  if (pagination ? pagination.total === 0 : incomes.length === 0) {
+  const isEmpty = pagination ? pagination.total === 0 : incomes.length === 0;
+  if (isEmpty) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -88,12 +115,31 @@ export function IncomesList({ categories }: IncomesListProps) {
     );
   }
 
-  // Pre-compute totals per month for the section headers
-  const monthlyTotals = incomes.reduce<Record<string, number>>((acc, income) => {
-    const key = format(new Date(income.date), "MMMM yyyy");
-    acc[key] = (acc[key] || 0) + income.amount;
+  const monthlyTotals = incomes.reduce<Record<string, number>>((acc, i) => {
+    const key = format(new Date(i.date), "MMMM yyyy");
+    acc[key] = (acc[key] || 0) + i.amount;
     return acc;
   }, {});
+
+  const mobileMonthlyTotals = mobileIncomes.reduce<Record<string, number>>((acc, i) => {
+    const key = format(new Date(i.date), "MMMM yyyy");
+    acc[key] = (acc[key] || 0) + i.amount;
+    return acc;
+  }, {});
+
+  const mobileGroups = (() => {
+    let lastMonth = "";
+    const groups: { monthLabel: string; items: Income[] }[] = [];
+    mobileIncomes.forEach((income) => {
+      const ml = format(new Date(income.date), "MMMM yyyy");
+      if (ml !== lastMonth) {
+        groups.push({ monthLabel: ml, items: [] });
+        lastMonth = ml;
+      }
+      groups[groups.length - 1].items.push(income);
+    });
+    return groups;
+  })();
 
   return (
     <>
@@ -120,20 +166,14 @@ export function IncomesList({ categories }: IncomesListProps) {
                 return (
                   <React.Fragment key={income.id}>
                     {isNewMonth && (
-                      <TableRow
-                        key={`month-${monthLabel}`}
-                        className="hover:bg-transparent border-t border-border/40 first:border-t-0"
-                      >
+                      <TableRow className="hover:bg-transparent border-t border-border/40 first:border-t-0">
                         <TableCell colSpan={5} className="px-6 py-2.5 bg-accent">
                           <div className="flex items-center justify-between">
                             <span className="text-xs uppercase tracking-widest text-emerald-500 font-semibold">
                               {monthLabel}
                             </span>
                             <span className="text-xs text-emerald-500 font-semibold tabular-nums">
-                              ₹
-                              {(monthlyTotals[monthLabel] || 0).toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                              })}
+                              ₹{(monthlyTotals[monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                         </TableCell>
@@ -154,26 +194,16 @@ export function IncomesList({ categories }: IncomesListProps) {
                         <div className="flex items-center gap-2">
                           <div
                             className="p-1.5 rounded-lg transition-transform hover:scale-110"
-                            style={{
-                              backgroundColor: (income.category?.color || "#3498DB") + "20",
-                            }}
+                            style={{ backgroundColor: (income.category?.color || "#3498DB") + "20" }}
                           >
-                            <Icon
-                              className="h-4 w-4"
-                              style={{ color: income.category?.color || "#3498DB" }}
-                            />
+                            <Icon className="h-4 w-4" style={{ color: income.category?.color || "#3498DB" }} />
                           </div>
                           <span className="text-sm">{income.category?.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground px-4">
-                        {income.source}
-                      </TableCell>
+                      <TableCell className="text-muted-foreground px-4">{income.source}</TableCell>
                       <TableCell className="text-right font-semibold px-4 pr-6 text-green-600">
-                        +₹
-                        {income.amount.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                        +₹{income.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
@@ -184,96 +214,83 @@ export function IncomesList({ categories }: IncomesListProps) {
         </Table>
       </Card>
 
-      {/* ── Mobile List View — grouped by month ── */}
-      <div className="md:hidden space-y-4">
-        {(() => {
-          let lastMobileMonth = "";
-          const groups: { monthLabel: string; items: typeof incomes }[] = [];
-          incomes.forEach((income) => {
-            const ml = format(new Date(income.date), "MMMM yyyy");
-            if (ml !== lastMobileMonth) {
-              groups.push({ monthLabel: ml, items: [] });
-              lastMobileMonth = ml;
-            }
-            groups[groups.length - 1].items.push(income);
-          });
-
-          return groups.map((group) => (
-            <Card key={group.monthLabel} className="animate-fade-in-up overflow-hidden gap-2 py-2">
-              {/* Month header */}
-              <div className="flex items-center justify-between px-4 py-2 bg-accent/30 border-b border-border/40">
-                <span className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
-                  {group.monthLabel}
-                </span>
-                <span className="text-xs font-semibold text-emerald-500 tabular-nums">
-                  ₹{(monthlyTotals[group.monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-
-              {/* Entries */}
-              {group.items.map((income, idx) => {
-                const Icon = getCategoryIcon(income.category?.icon || "wallet");
-                return (
-                  <div
-                    key={income.id}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
-                      idx !== group.items.length - 1 ? "border-b border-border/30" : ""
-                    }`}
-                    onClick={() => setEditIncome(income)}
-                  >
-                    {/* Category icon */}
-                    <div
-                      className="p-2 rounded-lg shrink-0"
-                      style={{ backgroundColor: (income.category?.color || "#3498DB") + "20" }}
-                    >
-                      <Icon
-                        className="h-4 w-4"
-                        style={{ color: income.category?.color || "#3498DB" }}
-                      />
-                    </div>
-
-                    {/* Description + Category + Source */}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate leading-tight">
-                        {income.description || "—"}
-                      </p>
-                      <div className="flex flex-col gap-0.5 mt-0.5">
-                        <span className="text-xs text-muted-foreground truncate">
-                          {income.category?.name}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground/80 truncate">
-                          Source: {income.source}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Amount + Date */}
-                    <div className="shrink-0 text-right">
-                      <p className="font-semibold text-sm text-green-600 tabular-nums">
-                        +₹{income.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {format(new Date(income.date), "MMM d")}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </Card>
-          ));
-        })()}
+      {/* ── Desktop Pagination ── */}
+      <div className="hidden md:block">
+        {pagination && (
+          <TablePagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            path="/incomes"
+          />
+        )}
       </div>
 
-      {/* ── Pagination ── */}
-      {pagination && (
-        <TablePagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          limit={pagination.limit}
-          path="/incomes"
-        />
-      )}
+      {/* ── Mobile List View — infinite scroll ── */}
+      <div className="md:hidden space-y-4">
+        {mobileGroups.map((group) => (
+          <Card key={group.monthLabel} className="animate-fade-in-up overflow-hidden gap-2 py-2">
+            <div className="flex items-center justify-between px-4 py-2 bg-accent/30 border-b border-border/40">
+              <span className="text-xs font-semibold uppercase tracking-widest text-emerald-500">
+                {group.monthLabel}
+              </span>
+              <span className="text-xs font-semibold text-emerald-500 tabular-nums">
+                ₹{(mobileMonthlyTotals[group.monthLabel] || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {group.items.map((income, idx) => {
+              const Icon = getCategoryIcon(income.category?.icon || "wallet");
+              return (
+                <div
+                  key={income.id}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
+                    idx !== group.items.length - 1 ? "border-b border-border/30" : ""
+                  }`}
+                  onClick={() => setEditIncome(income)}
+                >
+                  <div
+                    className="p-2 rounded-lg shrink-0"
+                    style={{ backgroundColor: (income.category?.color || "#3498DB") + "20" }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: income.category?.color || "#3498DB" }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate leading-tight">{income.description || "—"}</p>
+                    <div className="flex flex-col gap-0.5 mt-0.5">
+                      <span className="text-xs text-muted-foreground truncate">{income.category?.name}</span>
+                      <span className="text-[10px] text-muted-foreground/80 truncate">Source: {income.source}</span>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-semibold text-sm text-green-600 tabular-nums">
+                      +₹{income.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {format(new Date(income.date), "MMM d")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        ))}
+
+        <div ref={sentinelRef} className="h-px" />
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!mobileHasMore && mobileIncomes.length > 0 && mobilePagination && mobilePagination.total > mobilePagination.limit && (
+          <p className="text-center text-xs text-muted-foreground py-3">
+            All {mobilePagination.total} incomes loaded
+          </p>
+        )}
+      </div>
 
       {/* ── Edit / Detail Modal ── */}
       <Dialog open={!!editIncome} onOpenChange={() => setEditIncome(null)}>
@@ -281,7 +298,6 @@ export function IncomesList({ categories }: IncomesListProps) {
           <DialogHeader className="mb-1">
             <DialogTitle className="text-xl font-semibold">Edit Income</DialogTitle>
           </DialogHeader>
-
           {editIncome && (
             <IncomeForm
               categories={categories}
@@ -297,22 +313,17 @@ export function IncomesList({ categories }: IncomesListProps) {
       {/* ── Delete Confirmation ── */}
       <AlertDialog
         open={!!deleteIncome}
-        onOpenChange={(open) => {
-          if (!open) setDeleteIncome(null);
-        }}
+        onOpenChange={(open) => { if (!open) setDeleteIncome(null); }}
       >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Income</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this income? This action cannot be
-              undone.
+              Are you sure you want to delete this income? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteIncomeMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteIncomeMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteIncomeMutation.isPending}

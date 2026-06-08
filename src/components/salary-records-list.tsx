@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Banknote } from "lucide-react";
+import { Banknote, Loader2 } from "lucide-react";
 import { useSalaryRecords, useDeleteSalaryRecord } from "@/hooks/use-salary-records";
+import { useInfiniteSalaryRecords } from "@/hooks/use-infinite-salary-records";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   Table,
@@ -46,13 +49,28 @@ interface SalaryRecordsListProps {
 }
 
 export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
+  const isMobile = useIsMobile();
+
   const { data, isLoading, error } = useSalaryRecords();
+
+  const {
+    data: infiniteData,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteSalaryRecords({ enabled: isMobile });
+
+  const { ref: sentinelRef, isIntersecting } = useIntersectionObserver();
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const deleteRecord = useDeleteSalaryRecord();
   const [editRecord, setEditRecord] = useState<SalaryRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalaryRecord | null>(null);
-
-  const records = data?.salaryRecords || [];
-  const pagination = data?.pagination;
 
   function handleDelete() {
     if (!deleteTarget) return;
@@ -64,7 +82,14 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
     });
   }
 
-  if (isLoading) return <LoadingCard text="Loading salary records..." />;
+  const records = data?.salaryRecords || [];
+  const pagination = data?.pagination;
+
+  const mobileRecords = infiniteData?.pages.flatMap((p) => p.salaryRecords) ?? records;
+  const mobileHasMore = hasNextPage ?? false;
+  const mobilePagination = infiniteData?.pages.at(-1)?.pagination;
+
+  if (isLoading && !data) return <LoadingCard text="Loading salary records..." />;
 
   if (error) {
     return (
@@ -77,7 +102,8 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
     );
   }
 
-  if (pagination ? pagination.total === 0 : records.length === 0) {
+  const isEmpty = pagination ? pagination.total === 0 : records.length === 0;
+  if (isEmpty) {
     return (
       <Card className="animate-fade-in-up">
         <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
@@ -122,9 +148,7 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
                     </div>
                     <div>
                       <p className="font-medium">{record.employee?.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {record.employee?.designation}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{record.employee?.designation}</p>
                     </div>
                   </div>
                 </TableCell>
@@ -136,7 +160,7 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
                 <TableCell className="text-muted-foreground px-4">
                   {format(new Date(record.paymentDate), "MMM d, yyyy")}
                 </TableCell>
-                <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate px-4">
+                <TableCell className="text-muted-foreground text-sm max-w-50 truncate px-4">
                   {record.remarks || <span className="text-muted-foreground/30">—</span>}
                 </TableCell>
                 <TableCell className="text-right font-semibold px-4 pr-6">
@@ -148,40 +172,42 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
         </Table>
       </Card>
 
-      {/* ── Mobile List View ── */}
+      {/* ── Desktop Pagination ── */}
+      <div className="hidden md:block">
+        {pagination && (
+          <TablePagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            path="/salary"
+          />
+        )}
+      </div>
+
+      {/* ── Mobile List View — infinite scroll ── */}
       <div className="md:hidden space-y-4">
         <Card className="animate-fade-in-up overflow-hidden gap-2 py-2">
-          {records.map((record, idx) => (
+          {mobileRecords.map((record, idx) => (
             <div
               key={record.id}
               className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
-                idx !== records.length - 1 ? "border-b border-border/30" : ""
+                idx !== mobileRecords.length - 1 ? "border-b border-border/30" : ""
               }`}
               onClick={() => setEditRecord(record)}
             >
-              {/* Avatar Initial */}
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-sm font-semibold text-primary">
                   {record.employee?.name?.charAt(0).toUpperCase() ?? "?"}
                 </span>
               </div>
-
-              {/* Employee + Designation + Remarks */}
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm truncate leading-tight">
-                  {record.employee?.name}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {record.employee?.designation}
-                </p>
+                <p className="font-medium text-sm truncate leading-tight">{record.employee?.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{record.employee?.designation}</p>
                 {record.remarks && (
-                  <p className="text-[10px] text-muted-foreground/80 mt-1 truncate">
-                    {record.remarks}
-                  </p>
+                  <p className="text-[10px] text-muted-foreground/80 mt-1 truncate">{record.remarks}</p>
                 )}
               </div>
-
-              {/* Amount + Date + Period */}
               <div className="shrink-0 text-right">
                 <p className="font-semibold text-sm tabular-nums">
                   ₹{record.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -196,18 +222,21 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
             </div>
           ))}
         </Card>
-      </div>
 
-      {/* ── Pagination ── */}
-      {pagination && (
-        <TablePagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          limit={pagination.limit}
-          path="/salary"
-        />
-      )}
+        <div ref={sentinelRef} className="h-px" />
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!mobileHasMore && mobileRecords.length > 0 && mobilePagination && mobilePagination.total > mobilePagination.limit && (
+          <p className="text-center text-xs text-muted-foreground py-3">
+            All {mobilePagination.total} records loaded
+          </p>
+        )}
+      </div>
 
       {/* ── Edit Dialog ── */}
       <Dialog open={!!editRecord} onOpenChange={() => setEditRecord(null)}>
@@ -230,9 +259,7 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
       {/* ── Delete Confirmation ── */}
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
       >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
@@ -240,19 +267,15 @@ export function SalaryRecordsList({ employees }: SalaryRecordsListProps) {
             <AlertDialogDescription>
               Are you sure you want to delete the{" "}
               <strong>
-                {deleteTarget
-                  ? `${MONTH_NAMES[deleteTarget.month - 1]} ${deleteTarget.year}`
-                  : ""}{" "}
+                {deleteTarget ? `${MONTH_NAMES[deleteTarget.month - 1]} ${deleteTarget.year}` : ""}{" "}
                 salary record
               </strong>{" "}
-              for <strong>{deleteTarget?.employee?.name}</strong>? The linked
-              expense entry will also be removed. This action cannot be undone.
+              for <strong>{deleteTarget?.employee?.name}</strong>? The linked expense entry will also be
+              removed. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteRecord.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteRecord.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteRecord.isPending}
