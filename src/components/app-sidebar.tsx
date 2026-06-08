@@ -157,12 +157,16 @@ function SidebarInner({ userData }: AppSidebarProps) {
                   >
                     <item.icon
                       className={cn(
-                        "h-4 w-4 shrink-0",
-                        isActive ? "text-primary-foreground" : "text-sidebar-foreground/50"
+                        "h-4 w-4 shrink-0 transition-colors duration-150",
+                        isActive
+                          ? "text-primary"
+                          : "text-sidebar-foreground/50 group-hover:text-primary"
                       )}
                     />
                     {!isCollapsed && (
-                      <span className="truncate">{item.label}</span>
+                      <span className={cn("truncate", isActive && "text-primary")}>
+                        {item.label}
+                      </span>
                     )}
                   </Link>
                 </SidebarMenuButton>
@@ -189,7 +193,7 @@ function SidebarInner({ userData }: AppSidebarProps) {
               <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
                 {displayName}
               </p>
-              <p className="text-[11px] text-sidebar-foreground/50 truncate mt-0.5">
+              <p className="text-xs text-sidebar-foreground/50 truncate mt-0.5">
                 {userData.email}
               </p>
             </div>
