@@ -52,6 +52,11 @@ interface UpdateEmployeeData extends Partial<CreateEmployeeData> {
   id: string;
 }
 
+async function invalidateEmployees(queryClient: ReturnType<typeof useQueryClient>) {
+  await queryClient.invalidateQueries({ queryKey: ["employees"], refetchType: "active" });
+  await queryClient.invalidateQueries({ queryKey: ["employees-infinite"] });
+}
+
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
 
@@ -71,7 +76,7 @@ export function useCreateEmployee() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["employees"], refetchType: "active" });
+      await invalidateEmployees(queryClient);
       toast.success("Employee created");
     },
     onError: (error: Error) => {
@@ -100,7 +105,7 @@ export function useUpdateEmployee() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["employees"], refetchType: "active" });
+      await invalidateEmployees(queryClient);
       toast.success("Employee updated");
     },
     onError: (error: Error) => {
@@ -124,7 +129,7 @@ export function useDeleteEmployee() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["employees"], refetchType: "active" });
+      await invalidateEmployees(queryClient);
       await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Employee deleted");
     },

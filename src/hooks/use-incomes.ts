@@ -41,15 +41,15 @@ export function useIncomes() {
       if (!response.ok) throw new Error("Failed to fetch incomes");
       return response.json();
     },
-    staleTime: 10 * 1000, // 10 seconds - balance freshness and performance
+    staleTime: 10 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: false, // Only refetch when explicitly needed
+    refetchOnWindowFocus: false,
   });
 }
 
 interface CreateIncomeData {
   amount: number;
-  description?: string; // Description is now optional
+  description?: string;
   date: string;
   source: string;
   categoryId: string;
@@ -57,6 +57,11 @@ interface CreateIncomeData {
 
 interface UpdateIncomeData extends CreateIncomeData {
   id: string;
+}
+
+async function invalidateIncomes(queryClient: ReturnType<typeof useQueryClient>) {
+  await queryClient.invalidateQueries({ queryKey: ["incomes"], refetchType: "active" });
+  await queryClient.invalidateQueries({ queryKey: ["incomes-infinite"] });
 }
 
 export function useCreateIncome() {
@@ -77,14 +82,8 @@ export function useCreateIncome() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: ["incomes"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateIncomes(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Income added");
     },
     onError: () => {
@@ -112,14 +111,8 @@ export function useUpdateIncome() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: ["incomes"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateIncomes(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Income updated");
     },
     onError: () => {
@@ -144,14 +137,8 @@ export function useDeleteIncome() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: ["incomes"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateIncomes(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Income deleted");
     },
     onError: () => {
@@ -159,4 +146,3 @@ export function useDeleteIncome() {
     },
   });
 }
-

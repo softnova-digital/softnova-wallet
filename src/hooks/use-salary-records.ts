@@ -59,6 +59,13 @@ interface UpdateSalaryRecordData {
   remarks?: string | null;
 }
 
+async function invalidateSalaryRecords(queryClient: ReturnType<typeof useQueryClient>) {
+  await queryClient.invalidateQueries({ queryKey: ["salary-records"], refetchType: "active" });
+  await queryClient.invalidateQueries({ queryKey: ["salary-records-infinite"] });
+  await queryClient.invalidateQueries({ queryKey: ["expenses"], refetchType: "active" });
+  await queryClient.invalidateQueries({ queryKey: ["expenses-infinite"] });
+}
+
 export function useCreateSalaryRecord() {
   const queryClient = useQueryClient();
 
@@ -78,8 +85,7 @@ export function useCreateSalaryRecord() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["salary-records"], refetchType: "active" });
-      await queryClient.invalidateQueries({ queryKey: ["expenses"], refetchType: "active" });
+      await invalidateSalaryRecords(queryClient);
       await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Salary record created");
     },
@@ -109,8 +115,7 @@ export function useUpdateSalaryRecord() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["salary-records"], refetchType: "active" });
-      await queryClient.invalidateQueries({ queryKey: ["expenses"], refetchType: "active" });
+      await invalidateSalaryRecords(queryClient);
       await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Salary record updated");
     },
@@ -135,8 +140,7 @@ export function useDeleteSalaryRecord() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["salary-records"], refetchType: "active" });
-      await queryClient.invalidateQueries({ queryKey: ["expenses"], refetchType: "active" });
+      await invalidateSalaryRecords(queryClient);
       await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Salary record deleted");
     },

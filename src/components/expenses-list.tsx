@@ -54,7 +54,6 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
   // Mobile: infinite scroll (enabled once isMobile is confirmed)
   const {
     data: infiniteData,
-    isLoading: infiniteLoading,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
@@ -138,19 +137,16 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     return acc;
   }, {});
 
-  // Group mobile expenses by month
+  // Group mobile expenses by month — Map preserves insertion order and deduplicates keys
   const mobileGroups = (() => {
-    let lastMonth = "";
-    const groups: { monthLabel: string; items: Expense[] }[] = [];
-    mobileExpenses.forEach((expense) => {
+    const order: string[] = [];
+    const map = new Map<string, Expense[]>();
+    for (const expense of mobileExpenses) {
       const ml = format(new Date(expense.date), "MMMM yyyy");
-      if (ml !== lastMonth) {
-        groups.push({ monthLabel: ml, items: [] });
-        lastMonth = ml;
-      }
-      groups[groups.length - 1].items.push(expense);
-    });
-    return groups;
+      if (!map.has(ml)) { order.push(ml); map.set(ml, []); }
+      map.get(ml)!.push(expense);
+    }
+    return order.map((monthLabel) => ({ monthLabel, items: map.get(monthLabel)! }));
   })();
 
   return (

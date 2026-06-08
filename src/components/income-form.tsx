@@ -10,6 +10,7 @@ import { useCreateIncome, useUpdateIncome } from "@/hooks/use-incomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SwipeToSubmit } from "@/components/ui/swipe-to-submit";
 import {
   Form,
   FormControl,
@@ -216,14 +217,13 @@ export function IncomeForm({
           )}
         />
 
-        {/* ── Footer buttons ── */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
-          {/* Delete — only shown when editing */}
+        {/* ── Footer ── */}
+        <div className="flex flex-col gap-3 pt-2 border-t border-border/40 mt-1">
           {onDelete && (
             <Button
               type="button"
               variant="destructive"
-              className="flex-1 w-full rounded-sm"
+              className="w-full rounded-sm"
               onClick={onDelete}
               disabled={isDeleting || isSubmitting}
             >
@@ -237,21 +237,12 @@ export function IncomeForm({
               )}
             </Button>
           )}
-
-          {/* Update / Add */}
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
-          >
-            {isSubmitting ? (
-              <LoadingSpinner size="sm" text="Saving…" />
-            ) : income ? (
-              "Update Income"
-            ) : (
-              "Add Income"
-            )}
-          </Button>
+          <SwipeToSubmit
+            onSubmit={() => form.handleSubmit(onSubmit)()}
+            isLoading={isSubmitting}
+            label={income ? "Swipe to edit income" : "Swipe to add income"}
+            disabled={isDeleting}
+          />
         </div>
       </form>
     </Form>

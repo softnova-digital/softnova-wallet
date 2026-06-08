@@ -49,7 +49,7 @@ export function useExpenses() {
 
 interface CreateExpenseData {
   amount: number;
-  description?: string; // Description is now optional
+  description?: string;
   date: string;
   payee: string;
   categoryId: string;
@@ -60,6 +60,11 @@ interface CreateExpenseData {
 
 interface UpdateExpenseData extends CreateExpenseData {
   id: string;
+}
+
+async function invalidateExpenses(queryClient: ReturnType<typeof useQueryClient>) {
+  await queryClient.invalidateQueries({ queryKey: ["expenses"], refetchType: "active" });
+  await queryClient.invalidateQueries({ queryKey: ["expenses-infinite"] });
 }
 
 export function useCreateExpense() {
@@ -80,15 +85,8 @@ export function useCreateExpense() {
       return response.json();
     },
     onSuccess: async () => {
-      // Invalidate and refetch expenses
-      await queryClient.invalidateQueries({ 
-        queryKey: ["expenses"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateExpenses(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Expense created");
     },
     onError: () => {
@@ -116,14 +114,8 @@ export function useUpdateExpense() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: ["expenses"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateExpenses(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Expense updated");
     },
     onError: () => {
@@ -148,14 +140,8 @@ export function useDeleteExpense() {
       return response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: ["expenses"],
-        refetchType: "active"
-      });
-      // Force refetch dashboard even if not currently mounted
-      await queryClient.refetchQueries({ 
-        queryKey: ["dashboard"]
-      });
+      await invalidateExpenses(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["dashboard"] });
       toast.success("Expense deleted");
     },
     onError: () => {
@@ -163,4 +149,3 @@ export function useDeleteExpense() {
     },
   });
 }
-

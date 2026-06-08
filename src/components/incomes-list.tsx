@@ -50,7 +50,6 @@ export function IncomesList({ categories }: IncomesListProps) {
 
   const {
     data: infiniteData,
-    isLoading: infiniteLoading,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
@@ -128,17 +127,14 @@ export function IncomesList({ categories }: IncomesListProps) {
   }, {});
 
   const mobileGroups = (() => {
-    let lastMonth = "";
-    const groups: { monthLabel: string; items: Income[] }[] = [];
-    mobileIncomes.forEach((income) => {
+    const order: string[] = [];
+    const map = new Map<string, Income[]>();
+    for (const income of mobileIncomes) {
       const ml = format(new Date(income.date), "MMMM yyyy");
-      if (ml !== lastMonth) {
-        groups.push({ monthLabel: ml, items: [] });
-        lastMonth = ml;
-      }
-      groups[groups.length - 1].items.push(income);
-    });
-    return groups;
+      if (!map.has(ml)) { order.push(ml); map.set(ml, []); }
+      map.get(ml)!.push(income);
+    }
+    return order.map((monthLabel) => ({ monthLabel, items: map.get(monthLabel)! }));
   })();
 
   return (

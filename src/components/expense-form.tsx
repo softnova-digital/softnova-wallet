@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SwipeToSubmit } from "@/components/ui/swipe-to-submit";
 import {
   Form,
   FormControl,
@@ -88,7 +89,7 @@ export function ExpenseForm({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       amount: expense?.amount?.toString() || "",
-      description: expense?.description || undefined,
+      description: expense?.description || "",
       date: expense?.date ? new Date(expense.date) : new Date(),
       payee: (expense?.payee as ExpenseFormValues["payee"]) || PARTNERS[0],
       categoryId: expense?.categoryId || "",
@@ -378,14 +379,13 @@ export function ExpenseForm({
           )}
         </div>
 
-        {/* ── Footer buttons ── */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
-          {/* Delete — only shown when editing */}
+        {/* ── Footer ── */}
+        <div className="flex flex-col gap-3 pt-2 border-t border-border/40 mt-1">
           {onDelete && (
             <Button
               type="button"
               variant="destructive"
-              className="flex-1 w-full rounded-sm"
+              className="w-full rounded-sm"
               onClick={onDelete}
               disabled={isDeleting || isSubmitting}
             >
@@ -399,24 +399,12 @@ export function ExpenseForm({
               )}
             </Button>
           )}
-
-          {/* Update / Add */}
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
-          >
-            {isSubmitting ? (
-              <LoadingSpinner
-                size="sm"
-                text={isUploadingReceipt ? "Uploading…" : "Saving…"}
-              />
-            ) : expense ? (
-              "Update Expense"
-            ) : (
-              "Add Expense"
-            )}
-          </Button>
+          <SwipeToSubmit
+            onSubmit={() => form.handleSubmit(onSubmit)()}
+            isLoading={isSubmitting}
+            label={expense ? "Swipe to edit expense" : "Swipe to add expense"}
+            disabled={isDeleting}
+          />
         </div>
       </form>
     </Form>
