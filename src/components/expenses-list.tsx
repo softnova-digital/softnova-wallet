@@ -2,12 +2,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import {
-  Edit,
-  Trash2,
-  Receipt,
-  MoreHorizontal,
-} from "lucide-react";
+import { Trash2, Receipt } from "lucide-react";
 import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
 
 import {
@@ -21,16 +16,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -66,6 +56,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
     deleteExpenseMutation.mutate(deleteExpense.id, {
       onSuccess: () => {
         setDeleteExpense(null);
+        setEditExpense(null);
       },
     });
   }
@@ -113,7 +104,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
 
   return (
     <>
-      {/* Desktop Table View */}
+      {/* ── Desktop Table View ── */}
       <Card className="hidden md:block animate-fade-in-up overflow-hidden">
         <Table>
           <TableHeader>
@@ -122,7 +113,6 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
               <TableHead className="px-4">Description</TableHead>
               <TableHead className="px-4">Category</TableHead>
               <TableHead className="text-right px-4">Amount</TableHead>
-              <TableHead className="w-[60px] pr-6"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,7 +133,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                         className="hover:bg-transparent border-t border-border/40 first:border-t-0"
                       >
                         <TableCell
-                          colSpan={5}
+                          colSpan={4}
                           className="px-6 py-2.5 bg-accent"
                         >
                           <div className="flex items-center justify-between">
@@ -163,8 +153,9 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                     )}
                     <TableRow
                       key={expense.id}
-                      className="table-row-animate animate-fade-in-up"
+                      className="table-row-animate animate-fade-in-up cursor-pointer hover:bg-accent/40 transition-colors"
                       style={{ animationDelay: `${index * 25}ms` }}
+                      onClick={() => setEditExpense(expense)}
                     >
                       <TableCell className="text-muted-foreground pl-6 pr-4">
                         {format(new Date(expense.date), "MMM d, yyyy")}
@@ -217,54 +208,11 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-semibold px-4">
+                      <TableCell className="text-right font-semibold px-4 pr-6">
                         ₹
                         {expense.amount.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
                         })}
-                      </TableCell>
-                      <TableCell className="pr-6">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="hover:bg-accent"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="animate-scale-in"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => setEditExpense(expense)}
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            {expense.receiptUrl && (
-                              <DropdownMenuItem asChild>
-                                <a
-                                  href={expense.receiptUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <Receipt className="h-4 w-4 mr-2" />
-                                  View Receipt
-                                </a>
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => setDeleteExpense(expense)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
@@ -275,7 +223,7 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         </Table>
       </Card>
 
-      {/* Mobile List View — grouped by month */}
+      {/* ── Mobile List View — grouped by month ── */}
       <div className="md:hidden space-y-4">
         {(() => {
           let lastMobileMonth = "";
@@ -307,7 +255,10 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                 return (
                   <div
                     key={expense.id}
-                    className={`flex items-center gap-3 px-4 py-3 ${idx !== group.items.length - 1 ? "border-b border-border/30" : ""}`}
+                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/30 transition-colors ${
+                      idx !== group.items.length - 1 ? "border-b border-border/30" : ""
+                    }`}
+                    onClick={() => setEditExpense(expense)}
                   >
                     {/* Category icon */}
                     <div
@@ -330,44 +281,14 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
                       </p>
                     </div>
 
-                    {/* Amount + Date + Actions */}
-                    <div className="shrink-0 text-right flex items-center gap-1">
-                      <div>
-                        <p className="font-semibold text-sm tabular-nums">
-                          ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {format(new Date(expense.date), "MMM d")}
-                        </p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 shrink-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditExpense(expense)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          {expense.receiptUrl && (
-                            <DropdownMenuItem asChild>
-                              <a href={expense.receiptUrl} target="_blank" rel="noopener noreferrer">
-                                <Receipt className="h-4 w-4 mr-2" />
-                                View Receipt
-                              </a>
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDeleteExpense(expense)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    {/* Amount + Date */}
+                    <div className="shrink-0 text-right">
+                      <p className="font-semibold text-sm tabular-nums">
+                        ₹{expense.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {format(new Date(expense.date), "MMM d")}
+                      </p>
                     </div>
                   </div>
                 );
@@ -377,29 +298,58 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
         })()}
       </div>
 
-      {/* Edit Dialog */}
+      {/* ── Edit / Detail Modal ── */}
       <Dialog open={!!editExpense} onOpenChange={() => setEditExpense(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Expense</DialogTitle>
           </DialogHeader>
+
           {editExpense && (
-            <ExpenseForm
-              categories={categories}
-              labels={labels}
-              expense={editExpense}
-              onSuccess={() => {
-                setEditExpense(null);
-              }}
-            />
+            <>
+              <ExpenseForm
+                categories={categories}
+                labels={labels}
+                expense={editExpense}
+                onSuccess={() => setEditExpense(null)}
+              />
+
+              {/* Danger zone — separate from the form's own submit button */}
+              <DialogFooter className="border-t border-border/40 pt-4 mt-2 flex-row justify-between sm:justify-between gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteExpense(editExpense)}
+                  disabled={deleteExpenseMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Expense
+                </Button>
+
+                {editExpense.receiptUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={editExpense.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      View Receipt
+                    </a>
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* ── Delete Confirmation ── */}
       <AlertDialog
         open={!!deleteExpense}
-        onOpenChange={() => setDeleteExpense(null)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteExpense(null);
+        }}
       >
         <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
