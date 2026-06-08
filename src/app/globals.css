@@ -4,83 +4,140 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ── Font stack ─────────────────────────────────────────────────── */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
+  /* ── Core surface tokens ────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* ── Brand ──────────────────────────────────────────────────────── */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-softnova: var(--softnova);
   --color-softnova-foreground: var(--softnova-foreground);
+
+  /* ── Neutral surfaces ───────────────────────────────────────────── */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* ── Semantic ───────────────────────────────────────────────────── */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* ── Form & interaction ─────────────────────────────────────────── */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* ── Sidebar ────────────────────────────────────────────────────── */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Charts ─────────────────────────────────────────────────────── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* ── Radius scale ───────────────────────────────────────────────── */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   Design tokens
+   ══════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --radius: 0.625rem;
-  --background: #121214;
-  --foreground: oklch(0.95 0 0);
-  --card: #1C1B1D;
-  --card-foreground: oklch(0.95 0 0);
-  --popover: #1C1B1D;
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: #48E17C;
-  --primary-foreground: #121214;
-  --secondary: #1C1B1D;
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: #222123;
-  --muted-foreground: oklch(0.60 0 0);
-  --accent: #222123;
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: #48E17C;
-  --softnova: #48E17C;
-  --softnova-foreground: #121214;
+  /* Radius */
+  --radius: 0.75rem; /* 12px — cards override to 16px via rounded-2xl */
+
+  /* ── Background depth system (4 layers) ─────────────────────────── */
+  --background:  #0E0E11;
+  --surface-1:   #151518;
+  --surface-2:   #1C1B20;
+  --surface-3:   #232228;
+
+  /* ── ShadCN surface mappings ────────────────────────────────────── */
+  --card:                 var(--surface-1);
+  --card-foreground:      oklch(0.96 0 0);
+  --popover:              var(--surface-2);
+  --popover-foreground:   oklch(0.96 0 0);
+  --secondary:            var(--surface-2);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted:                var(--surface-2);
+  --muted-foreground:     oklch(0.50 0 0);
+  --accent:               var(--surface-2);
+  --accent-foreground:    oklch(0.96 0 0);
+  --foreground:           oklch(0.96 0 0);
+
+  /* ── Brand — Emerald green ──────────────────────────────────────── */
+  --primary:             #48E17C;
+  --primary-foreground:  #040D07;
+  --softnova:            #48E17C;
+  --softnova-foreground: #040D07;
+
+  /* ── Semantic color tokens ──────────────────────────────────────── */
+  --success:             oklch(0.65 0.18 145);
+  --success-foreground:  #030d06;
+  --warning:             oklch(0.75 0.18 70);
+  --warning-foreground:  #120700;
+  --info:                oklch(0.68 0.16 240);
+  --info-foreground:     #020812;
+  --destructive:         oklch(0.65 0.22 22.216);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* ── Borders & inputs ───────────────────────────────────────────── */
+  --border: oklch(1 0 0 / 7%);
+  --input:  oklch(1 0 0 / 9%);
+  --ring:   #48E17C;
+
+  /* ── Charts ─────────────────────────────────────────────────────── */
   --chart-1: #48E17C;
-  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-2: oklch(0.60 0.118 184.704);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #1C1B1D;
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: #48E17C;
-  --sidebar-primary-foreground: #121214;
-  --sidebar-accent: #222123;
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: #48E17C;
+
+  /* ── Sidebar ────────────────────────────────────────────────────── */
+  --sidebar:                   var(--surface-1);
+  --sidebar-foreground:        oklch(0.96 0 0);
+  --sidebar-primary:           #48E17C;
+  --sidebar-primary-foreground:#040D07;
+  --sidebar-accent:            var(--surface-2);
+  --sidebar-accent-foreground: oklch(0.96 0 0);
+  --sidebar-border:            oklch(1 0 0 / 6%);
+  --sidebar-ring:              #48E17C;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Base layer
+   ══════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   * {
@@ -88,255 +145,206 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Unlock OpenType features supported by Inter */
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variant-numeric: tabular-nums;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.02em;
   }
 }
 
-/* Custom Animations */
+/* ══════════════════════════════════════════════════════════════════════
+   Keyframe animations
+   ══════════════════════════════════════════════════════════════════════ */
+
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in-down {
-  from {
-    opacity: 0;
-    transform: translateY(-16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
-/* Removed heavy animations: bounce-in, pulse-soft, shimmer, float - not needed for production */
 
 @keyframes progress-fill {
-  from {
-    width: 0%;
-  }
+  from { width: 0%; }
 }
 
-/* Animation Classes - Optimized for performance */
+/* ══════════════════════════════════════════════════════════════════════
+   Animation utility classes
+   ══════════════════════════════════════════════════════════════════════ */
+
 .animate-fade-in {
   animation: fade-in 0.2s ease-out forwards;
   opacity: 0;
 }
-
 .animate-fade-in-up {
-  animation: fade-in-up 0.2s ease-out forwards;
+  animation: fade-in-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
-
 .animate-fade-in-down {
-  animation: fade-in-down 0.2s ease-out forwards;
+  animation: fade-in-down 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
-
 .animate-slide-in-left {
-  animation: slide-in-left 0.2s ease-out forwards;
+  animation: slide-in-left 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
-
 .animate-slide-in-right {
-  animation: slide-in-right 0.2s ease-out forwards;
+  animation: slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
-
 .animate-scale-in {
-  animation: scale-in 0.15s ease-out forwards;
+  animation: scale-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
-
-/* Removed bounce-in - too heavy for production */
-
-/* Removed pulse-soft, float, shimmer classes - not needed */
-
 .animate-progress-fill {
   animation: progress-fill 1s ease-out forwards;
 }
 
-/* Staggered Animation Delays - Reduced */
-.stagger-1 { animation-delay: 25ms; }
-.stagger-2 { animation-delay: 50ms; }
-.stagger-3 { animation-delay: 75ms; }
-.stagger-4 { animation-delay: 100ms; }
+/* ── Stagger delays ─────────────────────────────────────────────────── */
+.stagger-1 { animation-delay: 30ms;  }
+.stagger-2 { animation-delay: 60ms;  }
+.stagger-3 { animation-delay: 90ms;  }
+.stagger-4 { animation-delay: 120ms; }
 
-/* Hover Transitions - Optimized */
+/* ══════════════════════════════════════════════════════════════════════
+   Interactive transition utilities
+   ══════════════════════════════════════════════════════════════════════ */
+
 .hover-lift {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-
 .hover-lift:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.35);
 }
 
 .hover-scale {
   transition: transform 0.15s ease;
 }
-
 .hover-scale:hover {
-  transform: scale(1.01);
+  transform: scale(1.02);
 }
 
 .hover-glow {
   transition: box-shadow 0.2s ease;
 }
-
 .hover-glow:hover {
-  box-shadow: 0 0 12px rgba(46, 204, 113, 0.2);
+  box-shadow: 0 0 16px rgba(72, 225, 124, 0.18);
 }
 
-/* Card Animations - Reduced */
+/* ── Card hover interaction ─────────────────────────────────────────── */
 .card-interactive {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s ease,
+              border-color 0.18s ease;
 }
-
 .card-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.4);
+  border-color: oklch(1 0 0 / 12%);
 }
 
-/* Table Row Animations */
+/* ── Table row hover ────────────────────────────────────────────────── */
 .table-row-animate {
-  transition: background-color 0.15s ease;
+  transition: background-color 0.12s ease;
 }
-
 .table-row-animate:hover {
-  background-color: var(--accent);
+  background-color: var(--surface-2);
 }
 
-/* Button Press Effect */
+/* ── Button press feedback ──────────────────────────────────────────── */
 .btn-press {
-  transition: transform 0.1s ease;
+  transition: transform 0.08s ease;
 }
-
 .btn-press:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
-/* Gradient Background */
-.gradient-bg {
-  background: linear-gradient(
-    135deg,
-    var(--background) 0%,
-    color-mix(in oklch, var(--primary) 5%, var(--background)) 100%
-  );
-}
+/* ══════════════════════════════════════════════════════════════════════
+   Grid background pattern
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
-}
-
-/* Modern Grid Background Pattern */
 .grid-background {
   position: relative;
   background-color: var(--background);
 }
-
 .grid-background::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(to right, var(--border) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 32px 32px;
-  opacity: 0.08;
+  background-size: 40px 40px;
+  opacity: 0.035;
   pointer-events: none;
   z-index: 0;
 }
-
-.grid-background::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 1px 1px, var(--border) 0.5px, transparent 0);
-  background-size: 32px 32px;
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .grid-background > * {
   position: relative;
   z-index: 1;
 }
 
-/* Dark mode grid adjustments - more subtle */
-.dark .grid-background::before {
-  opacity: 0.04;
+/* ── Gradient overlay helpers ───────────────────────────────────────── */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    var(--background) 0%,
+    color-mix(in oklch, var(--primary) 4%, var(--background)) 100%
+  );
 }
 
-.dark .grid-background::after {
-  opacity: 0.02;
+/* Premium card shadow utility */
+.shadow-card {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 7%),
+    0 1px 2px 0 rgba(0, 0, 0, 0.5),
+    0 4px 12px -4px rgba(0, 0, 0, 0.4);
 }
 
-/* Hide Clerk sign-up link */
+/* ══════════════════════════════════════════════════════════════════════
+   Scrollbar
+   ══════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 12%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(1 0 0 / 20%);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Clerk — hide sign-up link (single-tenant app)
+   ══════════════════════════════════════════════════════════════════════ */
+
 .cl-rootBox .cl-footerActionLink,
 .cl-rootBox .cl-footerAction,
 .cl-rootBox a[href*="sign-up"],
@@ -345,23 +353,16 @@
   display: none !important;
 }
 
-/* ── Mobile & touch ──────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   Mobile & touch
+   ══════════════════════════════════════════════════════════════════════ */
 
-/*
- * Remove the 300ms tap delay on all interactive elements globally.
- * This is the single most impactful change for making a web app feel native.
- */
-a,
-button,
-[role="button"],
-input,
-select,
-textarea,
-label {
+/* Remove 300ms tap delay on interactive elements */
+a, button, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
 
-/* Minimum 44×44 touch targets on mobile (Apple HIG / WCAG 2.5.5) */
+/* WCAG 2.5.5 — 44×44 minimum touch target on mobile */
 @media (max-width: 1024px) {
   button,
   a,
@@ -372,48 +373,39 @@ label {
   }
 }
 
-/* Subtle tap highlight — feels native on dark UI */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
+/* Native-feeling tap highlight */
+* { -webkit-tap-highlight-color: transparent; }
 
-/* Active press feedback for tappable elements */
+/* Active feedback */
 button:active,
 a:active,
 [role="button"]:active {
-  opacity: 0.85;
+  opacity: 0.82;
 }
 
-/* Better momentum scrolling */
+/* Momentum scrolling */
 body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
-/* Inputs never zoom on iOS (font-size < 16px triggers zoom) */
+/* Prevent iOS input zoom (triggered when font-size < 16px) */
 @media (max-width: 768px) {
-  input,
-  textarea,
-  select {
-    font-size: max(16px, 1rem);
-  }
+  input, textarea, select { font-size: max(16px, 1rem); }
 }
 
-/* Safe-area utility — applied via inline style where needed */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
+/* Safe-area utilities */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe { padding-top:    env(safe-area-inset-top,    0px); }
 
-/* Reduced motion */
+/* ══════════════════════════════════════════════════════════════════════
+   Reduced motion — always last
+   ══════════════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1    !important;
+    transition-duration:      0.01ms !important;
   }
 }

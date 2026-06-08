@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
@@ -11,13 +11,13 @@ import { OfflineIndicator } from "@/components/offline-indicator";
 import { AuthGuard } from "@/components/auth-guard";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  display: "swap", // Optimize font loading
+  display: "swap",
   preload: true,
-  fallback: ["system-ui", "arial"],
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -85,7 +85,7 @@ export default function RootLayout({
       <ErrorBoundary>
         <ReactQueryProvider>
           <html lang="en" className="dark">
-            <body className={`${dmSans.variable} font-sans antialiased`}>
+            <body className={`${inter.variable} font-sans antialiased`}>
               <NavigationProgress />
               <OfflineIndicator />
               <AuthGuard />

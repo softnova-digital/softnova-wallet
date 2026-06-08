@@ -3,25 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, BanknoteArrowDown, BanknoteArrowUp, Settings, Users, Banknote } from "lucide-react";
+import {
+  LayoutDashboard,
+  BanknoteArrowDown,
+  BanknoteArrowUp,
+  Settings,
+  Users,
+  Banknote,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/",               label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expenses",       label: "Expenses",  icon: BanknoteArrowUp },
-  { href: "/incomes",        label: "Incomes",   icon: BanknoteArrowDown },
-  { href: "/employees",      label: "Staff",     icon: Users },
-  { href: "/salary-records", label: "Salary",    icon: Banknote },
-  { href: "/settings",       label: "Settings",  icon: Settings },
+  { href: "/",               label: "Home",     icon: LayoutDashboard },
+  { href: "/expenses",       label: "Expenses", icon: BanknoteArrowUp },
+  { href: "/incomes",        label: "Incomes",  icon: BanknoteArrowDown },
+  { href: "/employees",      label: "Staff",    icon: Users },
+  { href: "/salary-records", label: "Salary",   icon: Banknote },
+  { href: "/settings",       label: "Settings", icon: Settings },
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  // Tracks which item the user just tapped so it turns active instantly
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
-    // Clear optimistic state once navigation actually lands
     setPendingHref(null);
   }, [pathname]);
 
@@ -31,23 +36,23 @@ export function MobileBottomNav() {
       style={{
         zIndex: 99999,
         isolation: "isolate",
-        // Push content above iOS home indicator
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       <nav
-        className="flex items-center justify-around px-2 pt-2 pb-2 border-t border-white/20 shadow-2xl"
+        className="flex items-end justify-around px-1 pt-2 pb-2 border-t"
         style={{
-          backgroundColor: "rgba(28, 28, 28, 0.97)",
+          backgroundColor: "rgba(21, 21, 24, 0.92)",
+          borderTopColor: "oklch(1 0 0 / 8%)",
           borderRadius: "20px 20px 0 0",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: "blur(24px) saturate(160%)",
+          WebkitBackdropFilter: "blur(24px) saturate(160%)",
         }}
       >
         {navItems.map((item) => {
           const isActive =
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          const isPending = pendingHref === item.href;
+          const isPending  = pendingHref === item.href;
           const showActive = isActive || isPending;
           const Icon = item.icon;
 
@@ -55,39 +60,39 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => {
-                if (!isActive) setPendingHref(item.href);
-              }}
+              onClick={() => { if (!isActive) setPendingHref(item.href); }}
               className={cn(
-                // Minimum 44×44 touch target, no 300ms tap delay
-                "relative flex flex-col items-center justify-center gap-0.5 px-4 py-2",
-                "min-w-11 min-h-11 rounded-xl select-none",
-                // Instant color change, press scale feedback
-                "transition-colors duration-75",
+                "relative flex flex-col items-center justify-center gap-1 px-3 py-1.5",
+                "min-w-12 min-h-11 rounded-2xl select-none",
+                "transition-colors duration-100",
                 "active:scale-90",
                 showActive ? "text-primary" : "text-muted-foreground"
               )}
               style={{ touchAction: "manipulation" }}
             >
+              {/* Active pill background */}
+              {showActive && (
+                <span
+                  className="absolute inset-0 rounded-2xl bg-primary/10"
+                  style={{ transition: "opacity 100ms ease" }}
+                />
+              )}
+
               <Icon
                 className={cn(
-                  "w-5 h-5 transition-transform duration-75",
-                  showActive && "scale-110"
+                  "relative w-4.75 h-4.75 transition-transform duration-100",
+                  showActive && "scale-105"
                 )}
+                strokeWidth={showActive ? 2.2 : 1.8}
               />
               <span
                 className={cn(
-                  "text-[10px] font-medium leading-tight",
-                  showActive ? "text-primary" : "text-muted-foreground"
+                  "relative text-[10px] font-medium leading-none tracking-tight",
+                  showActive ? "text-primary" : "text-muted-foreground/70"
                 )}
               >
                 {item.label}
               </span>
-
-              {/* Active pill indicator */}
-              {showActive && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-primary rounded-full" />
-              )}
             </Link>
           );
         })}

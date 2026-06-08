@@ -8,11 +8,6 @@ import { RecentIncomes } from "@/components/recent-incomes";
 import { BudgetOverview } from "@/components/budget-overview";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import dynamic from "next/dynamic";
-
-const SpendingChart = dynamic(() => import("@/components/spending-chart").then(mod => ({ default: mod.SpendingChart })), {
-  ssr: false,
-  loading: () => <div className="h-[300px] animate-pulse bg-accent/50 rounded-lg" />
-});
 import {
   TrendingUp,
   TrendingDown,
@@ -38,56 +33,56 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-export const DashboardContent = memo(function DashboardContent() {
-  const [range, setRange] = useState<DashboardTimeRange>("all");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+const SpendingChart = dynamic(
+  () => import("@/components/spending-chart").then((mod) => ({ default: mod.SpendingChart })),
+  {
+    ssr: false,
+    loading: () => <div className="h-75 animate-pulse bg-accent/40 rounded-2xl" />,
+  }
+);
 
-  const { data, isLoading, error } = useDashboard({
-    range,
-    from: startDate,
-    to: endDate,
-  });
+/* ── Reusable page heading shared across loading/error/success states ── */
+function PageHeader() {
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+      <p className="text-muted-foreground text-sm mt-1 hidden sm:block">
+        Overview of your company finances
+      </p>
+    </div>
+  );
+}
+
+export const DashboardContent = memo(function DashboardContent() {
+  const [range, setRange]         = useState<DashboardTimeRange>("all");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate]     = useState<Date | undefined>(undefined);
+
+  const { data, isLoading, error } = useDashboard({ range, from: startDate, to: endDate });
 
   const rangeDescription = useMemo(() => {
     switch (range) {
-      case "all":
-        return "all time";
-      case "monthly":
-        return "this month";
-      case "yearly":
-        return "this year";
+      case "all":    return "all time";
+      case "monthly": return "this month";
+      case "yearly":  return "this year";
       case "custom":
-        if (startDate && endDate) {
-          return `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`;
-        }
-        return "selected period";
-      default:
-        return "all time";
+        return startDate && endDate
+          ? `${format(startDate, "MMM d")} – ${format(endDate, "MMM d")}`
+          : "selected period";
+      default: return "all time";
     }
   }, [range, startDate, endDate]);
 
-  const handleRangeChange = useCallback((value: DashboardTimeRange) => {
-    setRange(value);
-  }, []);
+  const handleRangeChange = useCallback((value: DashboardTimeRange) => setRange(value), []);
 
+  /* ── Loading state ────────────────────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Overview of your company finances
-            </p>
-          </div>
-        </div>
+        <PageHeader />
         <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-accent/50 rounded-lg animate-pulse"
-            />
+            <div key={i} className="h-32 bg-accent/40 rounded-2xl animate-pulse" />
           ))}
         </div>
         <LoadingOverlay text="Loading dashboard data..." />
@@ -95,47 +90,33 @@ export const DashboardContent = memo(function DashboardContent() {
     );
   }
 
+  /* ── Error state ──────────────────────────────────────────────────── */
   if (error) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <div className="animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Overview of your company finances
-          </p>
-        </div>
-        <div className="text-center py-12">
-          <p className="text-destructive">Failed to load dashboard data</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Please try refreshing the page
-          </p>
+        <PageHeader />
+        <div className="text-center py-16">
+          <p className="text-destructive font-medium">Failed to load dashboard data</p>
+          <p className="text-sm text-muted-foreground mt-1">Please try refreshing the page</p>
         </div>
       </div>
     );
   }
 
-  if (!data) {
-    return null;
-  }
+  if (!data) return null;
 
   const { stats, recentExpenses, recentIncomes, budgets, chartData } = data;
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="flex flex-row items-center justify-between gap-4 animate-fade-in">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground text-sm sm:text-base hidden sm:block">
-            Overview of your company finances
-          </p>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-          <Select
-            value={range}
-            onValueChange={handleRangeChange}
-          >
-            <SelectTrigger className="w-[130px] sm:w-[180px]">
+      {/* ── Page header + time-range controls ─────────────────────────── */}
+      <div className="flex flex-row items-center justify-between gap-4 animate-fade-in">
+        <PageHeader />
+
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center shrink-0">
+          <Select value={range} onValueChange={handleRangeChange}>
+            <SelectTrigger className="w-32.5 sm:w-45">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -152,45 +133,31 @@ export const DashboardContent = memo(function DashboardContent() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
+                    className={cn("w-35 justify-start text-left font-normal", !startDate && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, "MMM d, yyyy") : "Start"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={startDate} onSelect={setStartDate} />
                 </PopoverContent>
               </Popover>
-              <span className="text-muted-foreground">-</span>
+
+              <span className="text-muted-foreground/60 text-sm">–</span>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
+                    className={cn("w-35 justify-start text-left font-normal", !endDate && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, "MMM d, yyyy") : "End"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={endDate} onSelect={setEndDate} />
                 </PopoverContent>
               </Popover>
             </div>
@@ -198,43 +165,31 @@ export const DashboardContent = memo(function DashboardContent() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* ── KPI stat cards ────────────────────────────────────────────── */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           title="Income"
-          value={`₹${stats.monthlyIncome.value.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}`}
-          description={range === 'custom' || range === 'all' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
+          value={`₹${stats.monthlyIncome.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+          description={range === "custom" || range === "all" ? rangeDescription : `vs last ${range === "yearly" ? "year" : "month"}`}
           icon={CircleArrowDown}
-          trend={{
-            value: Math.abs(Math.round(stats.monthlyIncome.change)),
-            isPositive: stats.monthlyIncome.change >= 0,
-          }}
+          trend={{ value: Math.abs(Math.round(stats.monthlyIncome.change)), isPositive: stats.monthlyIncome.change >= 0 }}
           index={0}
           className="border-blue-500/20"
         />
         <DashboardCard
           title="Expenses"
-          value={`₹${stats.monthlyExpenses.value.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}`}
-          description={range === 'custom' || range === 'all' ? rangeDescription : `from last ${range === 'yearly' ? 'year' : 'month'}`}
+          value={`₹${stats.monthlyExpenses.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+          description={range === "custom" || range === "all" ? rangeDescription : `vs last ${range === "yearly" ? "year" : "month"}`}
           icon={CircleArrowUp}
-          trend={{
-            value: Math.abs(Math.round(stats.monthlyExpenses.change)),
-            isPositive: stats.monthlyExpenses.change <= 0,
-          }}
+          trend={{ value: Math.abs(Math.round(stats.monthlyExpenses.change)), isPositive: stats.monthlyExpenses.change <= 0 }}
           index={1}
         />
         <DashboardCard
           title="Net Balance"
-          value={`${stats.netBalance >= 0 ? '+' : '-'}₹${Math.abs(stats.netBalance).toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}`}
+          value={`${stats.netBalance >= 0 ? "+" : "-"}₹${Math.abs(stats.netBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
           description={rangeDescription}
           icon={stats.netBalance >= 0 ? TrendingUp : TrendingDown}
-          className={stats.netBalance >= 0 ? "border-green-500/20" : "border-destructive/20"}
+          className={stats.netBalance >= 0 ? "border-success/25" : "border-destructive/25"}
           index={2}
         />
         <DashboardCard
@@ -242,23 +197,23 @@ export const DashboardContent = memo(function DashboardContent() {
           value={stats.budgetAlerts.toString()}
           description={stats.budgetAlerts > 0 ? "budgets need attention" : "all budgets on track"}
           icon={AlertTriangle}
-          className={stats.budgetAlerts > 0 ? "border-destructive/50" : ""}
+          className={stats.budgetAlerts > 0 ? "border-destructive/40" : "border-success/20"}
           index={3}
         />
       </div>
 
-      {/* Charts and Budget Overview */}
+      {/* ── Charts ────────────────────────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-2">
         <SpendingChart data={chartData} />
         <BudgetOverview budgets={budgets} />
       </div>
 
-      {/* Recent Activity */}
+      {/* ── Recent activity ───────────────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-2">
         <RecentIncomes incomes={recentIncomes} />
         <RecentExpenses expenses={recentExpenses} />
       </div>
+
     </div>
   );
 });
-

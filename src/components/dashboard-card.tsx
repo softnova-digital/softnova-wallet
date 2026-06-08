@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 
 interface DashboardCardProps {
   title: string;
@@ -25,50 +25,59 @@ export function DashboardCard({
   index = 0,
 }: DashboardCardProps) {
   return (
-    <Card 
+    <Card
       className={cn(
-        "card-interactive hover-lift animate-fade-in-up overflow-hidden relative",
+        "card-interactive relative overflow-hidden gap-0 py-0",
+        "animate-fade-in-up",
         className
       )}
-      style={{ animationDelay: `${index * 50}ms` }}
+      style={{ animationDelay: `${index * 60}ms` }}
     >
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/5 pointer-events-none" />
-      
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className="p-2 rounded-lg bg-primary/10 transition-transform duration-150 group-hover:scale-105">
-          <Icon className="h-4 w-4 text-primary" />
+      {/* Subtle top-edge glow for primary brand feel */}
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent" />
+
+      <CardContent className="p-5 sm:p-6">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 leading-none mt-0.5">
+            {title}
+          </p>
+          <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+            <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} />
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl sm:text-3xl font-bold tracking-tight">{value}</div>
-        {(description || trend) && (
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+
+        {/* Primary value */}
+        <p className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-none mb-2.5">
+          {value}
+        </p>
+
+        {/* Trend + description */}
+        {(trend || description) && (
+          <div className="flex items-center gap-2">
             {trend && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 font-semibold px-1.5 py-0.5 rounded-full text-xs transition-all",
-                  trend.isPositive 
-                    ? "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-400/10" 
-                    : "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-400/10"
+                  "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold",
+                  trend.isPositive
+                    ? "bg-success/12 text-success"
+                    : "bg-destructive/12 text-destructive"
                 )}
               >
-                <svg 
-                  className={cn("w-3 h-3", !trend.isPositive && "rotate-180")} 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
+                {trend.isPositive ? (
+                  <TrendingUp className="w-3 h-3" strokeWidth={2} />
+                ) : (
+                  <TrendingDown className="w-3 h-3" strokeWidth={2} />
+                )}
                 {Math.abs(trend.value)}%
               </span>
             )}
-            <span className="text-muted-foreground">{description}</span>
-          </p>
+            {description && (
+              <span className="text-[11px] text-muted-foreground truncate">
+                {description}
+              </span>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
