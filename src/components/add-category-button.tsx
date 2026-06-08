@@ -30,7 +30,7 @@ export function AddCategoryButton({ defaultType = "EXPENSE" }: AddCategoryButton
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Add New {defaultType === "INCOME" ? "Income" : "Expense"} Category
+            New {defaultType === "INCOME" ? "Income" : "Expense"} Category
           </DialogTitle>
         </DialogHeader>
         <CategoryForm defaultType={defaultType} onSuccess={() => setOpen(false)} />

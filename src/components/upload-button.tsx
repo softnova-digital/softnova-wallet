@@ -46,7 +46,7 @@ export function UploadButton({ onFileSelect }: UploadButtonProps) {
         type="button"
         variant="outline"
         onClick={() => document.getElementById("receipt-upload")?.click()}
-        className="w-full"
+        className="w-full bg-accent hover:bg-accent/70 border-border"
       >
         <Upload className="h-4 w-4 mr-2" />
         Select Receipt

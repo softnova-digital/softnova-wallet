@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Trash2, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { useExpenses, useDeleteExpense } from "@/hooks/use-expenses";
 
 import {
@@ -14,13 +14,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -300,46 +298,20 @@ export function ExpensesList({ categories, labels }: ExpensesListProps) {
 
       {/* ── Edit / Detail Modal ── */}
       <Dialog open={!!editExpense} onOpenChange={() => setEditExpense(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Expense</DialogTitle>
+        <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+          <DialogHeader className="mb-1">
+            <DialogTitle className="text-xl font-semibold">Edit Expense</DialogTitle>
           </DialogHeader>
 
           {editExpense && (
-            <>
-              <ExpenseForm
-                categories={categories}
-                labels={labels}
-                expense={editExpense}
-                onSuccess={() => setEditExpense(null)}
-              />
-
-              {/* Danger zone — separate from the form's own submit button */}
-              <DialogFooter className="border-t border-border/40 pt-4 mt-2 flex-row justify-between sm:justify-between gap-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setDeleteExpense(editExpense)}
-                  disabled={deleteExpenseMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Expense
-                </Button>
-
-                {editExpense.receiptUrl && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={editExpense.receiptUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Receipt className="h-4 w-4 mr-2" />
-                      View Receipt
-                    </a>
-                  </Button>
-                )}
-              </DialogFooter>
-            </>
+            <ExpenseForm
+              categories={categories}
+              labels={labels}
+              expense={editExpense}
+              onSuccess={() => setEditExpense(null)}
+              onDelete={() => setDeleteExpense(editExpense)}
+              isDeleting={deleteExpenseMutation.isPending}
+            />
           )}
         </DialogContent>
       </Dialog>

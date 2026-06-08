@@ -5,12 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, Trash2, Upload, X } from "lucide-react";
 import { useCreateExpense, useUpdateExpense } from "@/hooks/use-expenses";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
@@ -33,7 +32,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Category, Label, Expense } from "@/types";
 import { getCategoryIcon } from "@/lib/category-icons";
@@ -43,7 +41,7 @@ import { toast } from "sonner";
 
 const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
-  description: z.string().optional(), // Description is now optional
+  description: z.string().optional(),
   date: z.date({ message: "Date is required" }),
   payee: z.enum(PARTNERS, {
     message: "Please select who paid for this expense",
@@ -61,6 +59,10 @@ interface ExpenseFormProps {
   labels: Label[];
   expense?: Expense;
   onSuccess?: () => void;
+  /** Called when the Delete button is clicked — triggers the confirmation dialog */
+  onDelete?: () => void;
+  /** Pass true while the delete mutation is in-flight */
+  isDeleting?: boolean;
 }
 
 export function ExpenseForm({
@@ -68,24 +70,25 @@ export function ExpenseForm({
   labels,
   expense,
   onSuccess,
+  onDelete,
+  isDeleting,
 }: ExpenseFormProps) {
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
-  // For existing receipts when editing
   const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | undefined>(
-    expense?.receiptUrl || undefined
+    expense?.receiptUrl || undefined,
   );
   const [existingReceiptPublicId, setExistingReceiptPublicId] = useState<string | undefined>(
-    expense?.receiptPublicId || undefined
+    expense?.receiptPublicId || undefined,
   );
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       amount: expense?.amount?.toString() || "",
-      description: expense?.description || undefined, // Handle null/undefined from database
+      description: expense?.description || undefined,
       date: expense?.date ? new Date(expense.date) : new Date(),
       payee: (expense?.payee as ExpenseFormValues["payee"]) || PARTNERS[0],
       categoryId: expense?.categoryId || "",
@@ -95,13 +98,13 @@ export function ExpenseForm({
     },
   });
 
-  const selectedLabels = form.watch("labelIds");
+  const selectedLabelIds = form.watch("labelIds");
+  const isSubmitting = createExpense.isPending || updateExpense.isPending || isUploadingReceipt;
 
   async function onSubmit(data: ExpenseFormValues) {
     let receiptUrl = existingReceiptUrl;
     let receiptPublicId = existingReceiptPublicId;
 
-    // Upload new file to Cloudinary if a file was selected
     if (selectedFile) {
       setIsUploadingReceipt(true);
       try {
@@ -126,12 +129,11 @@ export function ExpenseForm({
         console.error("Upload error:", error);
         toast.error(error instanceof Error ? error.message : "Failed to upload receipt");
         setIsUploadingReceipt(false);
-        return; // Prevent form submission if upload fails
+        return;
       } finally {
         setIsUploadingReceipt(false);
       }
     } else if (!existingReceiptUrl) {
-      // If no file selected and no existing receipt, clear receipt fields
       receiptUrl = undefined;
       receiptPublicId = undefined;
     }
@@ -140,7 +142,7 @@ export function ExpenseForm({
       ...data,
       amount: parseFloat(data.amount),
       date: data.date.toISOString(),
-      description: data.description?.trim() || undefined, // Convert empty strings to undefined
+      description: data.description?.trim() || undefined,
       receiptUrl,
       receiptPublicId,
     };
@@ -151,29 +153,17 @@ export function ExpenseForm({
       } else {
         await createExpense.mutateAsync(expenseData);
       }
-      // Dialog closes AFTER refetch completes
       onSuccess?.();
     } catch (error) {
-      // Error already handled by mutation onError
       console.error(error);
     }
   }
 
-  const toggleLabel = (labelId: string) => {
-    const current = form.getValues("labelIds");
-    if (current.includes(labelId)) {
-      form.setValue(
-        "labelIds",
-        current.filter((id) => id !== labelId)
-      );
-    } else {
-      form.setValue("labelIds", [...current, labelId]);
-    }
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+
+        {/* Row 1: Amount + Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -182,12 +172,7 @@ export function ExpenseForm({
               <FormItem>
                 <FormLabel>Amount (₹)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                  />
+                  <Input type="number" step="0.01" placeholder="0.00" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,14 +192,10 @@ export function ExpenseForm({
                         variant="outline"
                         className={cn(
                           "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          !field.value && "text-muted-foreground",
                         )}
                       >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
@@ -237,6 +218,7 @@ export function ExpenseForm({
           />
         </div>
 
+        {/* Description — single-line input */}
         <FormField
           control={form.control}
           name="description"
@@ -244,18 +226,14 @@ export function ExpenseForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="What was this expense for?"
-                  {...field}
-                />
+                <Input placeholder="What was this expense for?" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-
-
+        {/* Category */}
         <FormField
           control={form.control}
           name="categoryId"
@@ -264,7 +242,7 @@ export function ExpenseForm({
               <FormLabel>Category</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                 </FormControl>
@@ -274,10 +252,7 @@ export function ExpenseForm({
                     return (
                       <SelectItem key={category.id} value={category.id}>
                         <div className="flex items-center gap-2">
-                          <Icon
-                            className="h-4 w-4"
-                            style={{ color: category.color }}
-                          />
+                          <Icon className="h-4 w-4" style={{ color: category.color }} />
                           {category.name}
                         </div>
                       </SelectItem>
@@ -290,74 +265,110 @@ export function ExpenseForm({
           )}
         />
 
-        <div className="space-y-2">
-          <FormLabel>Labels</FormLabel>
-          <div className="flex flex-wrap gap-2">
-            {labels.map((label) => (
-              <Badge
-                key={label.id}
-                variant={selectedLabels.includes(label.id) ? "default" : "outline"}
-                className="cursor-pointer min-h-[36px] px-3 py-1.5 text-sm touch-manipulation"
-                style={
-                  selectedLabels.includes(label.id)
-                    ? { backgroundColor: label.color }
-                    : { borderColor: label.color, color: label.color }
-                }
-                onClick={() => toggleLabel(label.id)}
+        {/* Labels — dropdown multiselect mirroring Category style */}
+        <FormField
+          control={form.control}
+          name="labelIds"
+          render={() => (
+            <FormItem>
+              <FormLabel>Labels</FormLabel>
+              <Select
+                onValueChange={(val) => {
+                  const current = form.getValues("labelIds");
+                  if (current.includes(val)) {
+                    form.setValue("labelIds", current.filter((id) => id !== val));
+                  } else {
+                    form.setValue("labelIds", [...current, val]);
+                  }
+                }}
               >
-                {label.name}
-              </Badge>
-            ))}
-            {labels.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No labels available. Create labels in Settings.
-              </p>
-            )}
-          </div>
-        </div>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        selectedLabelIds.length === 0
+                          ? "Select labels…"
+                          : `${selectedLabelIds.length} label${selectedLabelIds.length > 1 ? "s" : ""} selected`
+                      }
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {labels.length === 0 ? (
+                    <p className="text-sm text-muted-foreground px-3 py-2">
+                      No labels — create some in Settings.
+                    </p>
+                  ) : (
+                    labels.map((label) => {
+                      const checked = selectedLabelIds.includes(label.id);
+                      return (
+                        <SelectItem key={label.id} value={label.id}>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "h-2 w-2 rounded-full shrink-0 border",
+                                checked ? "opacity-100" : "opacity-40",
+                              )}
+                              style={{ backgroundColor: label.color, borderColor: label.color }}
+                            />
+                            <span className={checked ? "font-medium" : ""}>{label.name}</span>
+                            {checked && (
+                              <span className="ml-auto text-xs text-muted-foreground">✓</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
+        {/* Receipt */}
         <div className="space-y-2">
           <FormLabel>Receipt</FormLabel>
           {selectedFile ? (
-            <div className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1 truncate text-sm">
-                <span className="text-muted-foreground">Selected: </span>
-                <span className="font-medium">{selectedFile.name}</span>
-                <span className="text-muted-foreground text-xs ml-2">
-                  ({(selectedFile.size / 1024).toFixed(1)} KB)
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-accent/30">
+              <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0 text-sm">
+                <span className="font-medium truncate block">{selectedFile.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
                 </span>
               </div>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="h-7 w-7 rounded-sm shrink-0"
                 onClick={() => setSelectedFile(null)}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : existingReceiptUrl ? (
-            <div className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1 truncate text-sm">
-                <a
-                  href={existingReceiptUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  View Current Receipt
-                </a>
-              </div>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-accent/30">
+              <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+              <a
+                href={existingReceiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-sm text-primary hover:underline truncate"
+              >
+                View Current Receipt
+              </a>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="h-7 w-7 shrink-0"
                 onClick={() => {
                   setExistingReceiptUrl(undefined);
                   setExistingReceiptPublicId(undefined);
-                  // Allow user to select a new file after removing existing one
                 }}
-                title="Remove receipt"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -367,16 +378,43 @@ export function ExpenseForm({
           )}
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
-          <Button 
-            type="submit" 
-            disabled={createExpense.isPending || updateExpense.isPending || isUploadingReceipt}
-            className="w-full sm:w-auto min-h-[44px]"
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing */}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isSubmitting}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Expense
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Update / Add */}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
           >
-            {(isUploadingReceipt || createExpense.isPending || updateExpense.isPending) ? (
-              <LoadingSpinner size="sm" text={isUploadingReceipt ? "Uploading Receipt..." : "Saving..."} />
+            {isSubmitting ? (
+              <LoadingSpinner
+                size="sm"
+                text={isUploadingReceipt ? "Uploading…" : "Saving…"}
+              />
+            ) : expense ? (
+              "Update Expense"
             ) : (
-              expense ? "Update Expense" : "Add Expense"
+              "Add Expense"
             )}
           </Button>
         </div>
@@ -384,4 +422,3 @@ export function ExpenseForm({
     </Form>
   );
 }
-

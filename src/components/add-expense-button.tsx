@@ -29,9 +29,9 @@ export function AddExpenseButton({ categories, labels }: AddExpenseButtonProps) 
           <span className="hidden sm:inline">New Expense</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>Add New Expense</DialogTitle>
+      <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+        <DialogHeader className="mb-1">
+          <DialogTitle className="text-xl font-semibold">New Expense</DialogTitle>
         </DialogHeader>
         <ExpenseForm
           categories={categories}
