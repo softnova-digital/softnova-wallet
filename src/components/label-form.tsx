@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,8 @@ interface LabelFormProps {
     color: string;
   };
   onSuccess?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
 const colorOptions = [
@@ -56,7 +59,12 @@ const colorOptions = [
   { name: "Amber", value: "#FFC107" },
 ];
 
-export function LabelForm({ label, onSuccess }: LabelFormProps) {
+export function LabelForm({
+  label,
+  onSuccess,
+  onDelete,
+  isDeleting,
+}: LabelFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -100,7 +108,7 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         <FormField
           control={form.control}
           name="name"
@@ -123,7 +131,7 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
               <FormLabel>Color</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a color" />
                   </SelectTrigger>
                 </FormControl>
@@ -147,8 +155,8 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
         />
 
         {/* Preview */}
-        <div className="p-4 bg-accent rounded-lg">
-          <p className="text-sm text-muted-foreground mb-2">Preview</p>
+        <div className="p-4 bg-accent/30 rounded-lg border border-border">
+          <p className="text-xs text-muted-foreground mb-2">Preview</p>
           <Badge
             style={{
               backgroundColor: selectedColor + "20",
@@ -161,12 +169,40 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
           </Badge>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing */}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isLoading}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Label
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Update / Add */}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
+          >
             {isLoading ? (
-              <LoadingSpinner size="sm" text="Saving..." />
+              <LoadingSpinner size="sm" text="Saving…" />
+            ) : label ? (
+              "Update Label"
             ) : (
-              label ? "Update Label" : "Create Label"
+              "Create Label"
             )}
           </Button>
         </div>
@@ -174,4 +210,3 @@ export function LabelForm({ label, onSuccess }: LabelFormProps) {
     </Form>
   );
 }
-

@@ -23,9 +23,9 @@ export function AddLabelButton() {
           Add Label
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Create New Label</DialogTitle>
+          <DialogTitle>New Label</DialogTitle>
         </DialogHeader>
         <LabelForm onSuccess={() => setOpen(false)} />
       </DialogContent>

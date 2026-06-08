@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Edit, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +53,7 @@ export function LabelsList({ labels }: LabelsListProps) {
 
       toast.success("Label deleted");
       setDeleteLabel(null);
+      setEditLabel(null);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -61,59 +63,63 @@ export function LabelsList({ labels }: LabelsListProps) {
 
   if (labels.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p>No labels created yet</p>
-        <p className="text-sm">Labels help you organize and filter expenses</p>
-      </div>
+      <Card className="animate-fade-in-up">
+        <CardContent className="p-8 sm:p-12 text-center text-muted-foreground">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/50 flex items-center justify-center animate-fade-in">
+            <Tag className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <p className="text-lg font-medium">No labels created yet</p>
+          <p className="text-sm mt-1">Labels help you organize and filter expenses</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        {labels.map((label) => (
-          <div
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {labels.map((label, index) => (
+          <Card
             key={label.id}
-            className="flex items-center gap-2 p-2 rounded-lg border bg-accent/50"
+            className="relative card-interactive hover-lift animate-fade-in-up overflow-hidden group cursor-pointer"
+            style={{ animationDelay: `${index * 25}ms` }}
+            onClick={() => setEditLabel(label)}
           >
-            <Badge
-              style={{
-                backgroundColor: label.color + "20",
-                color: label.color,
-                borderColor: label.color,
-              }}
-              variant="outline"
-            >
-              {label.name}
-            </Badge>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => setEditLabel(label)}
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-destructive hover:text-destructive"
-                onClick={() => setDeleteLabel(label)}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+            {/* Color accent bar */}
+            <div
+              className="absolute top-0 left-0 right-0 h-1 transition-all duration-150 group-hover:h-1.5"
+              style={{ backgroundColor: label.color }}
+            />
+            
+            <CardContent className="p-3 sm:p-4 sm:pt-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="p-2 sm:p-3 rounded-full transition-all duration-200 group-hover:scale-110 flex items-center justify-center"
+                    style={{ backgroundColor: label.color + "20" }}
+                  >
+                    <div
+                      className="h-4 w-4 sm:h-5 sm:w-5 rounded-full"
+                      style={{ backgroundColor: label.color }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm sm:text-base leading-tight">
+                      {label.name}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={!!editLabel} onOpenChange={() => setEditLabel(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Label</DialogTitle>
+        <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+          <DialogHeader className="mb-1">
+            <DialogTitle className="text-xl font-semibold">Edit Label</DialogTitle>
           </DialogHeader>
           {editLabel && (
             <LabelForm
@@ -122,6 +128,7 @@ export function LabelsList({ labels }: LabelsListProps) {
                 setEditLabel(null);
                 router.refresh();
               }}
+              onDelete={() => setDeleteLabel(editLabel)}
             />
           )}
         </DialogContent>
@@ -132,7 +139,7 @@ export function LabelsList({ labels }: LabelsListProps) {
         open={!!deleteLabel}
         onOpenChange={() => setDeleteLabel(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="animate-scale-in">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Label</AlertDialogTitle>
             <AlertDialogDescription>
@@ -144,7 +151,7 @@ export function LabelsList({ labels }: LabelsListProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-sm"
             >
               Delete
             </AlertDialogAction>

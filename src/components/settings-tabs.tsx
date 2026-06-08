@@ -54,10 +54,25 @@ export function SettingsTabs({ expenseCategories, incomeCategories, labels }: Se
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="expense-categories">Expense Categories</TabsTrigger>
-        <TabsTrigger value="income-categories">Income Categories</TabsTrigger>
-        <TabsTrigger value="labels">Labels</TabsTrigger>
+      <TabsList className="flex w-full overflow-x-auto scrollbar-none sm:grid sm:grid-cols-3 h-auto p-1 bg-muted rounded-lg">
+        <TabsTrigger
+          value="expense-categories"
+          className="flex-1 sm:flex-none whitespace-nowrap py-2 text-sm"
+        >
+          Expenses
+        </TabsTrigger>
+        <TabsTrigger
+          value="income-categories"
+          className="flex-1 sm:flex-none whitespace-nowrap py-2 text-sm"
+        >
+          Incomes
+        </TabsTrigger>
+        <TabsTrigger
+          value="labels"
+          className="flex-1 sm:flex-none whitespace-nowrap py-2 text-sm"
+        >
+          Labels
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="expense-categories" className="space-y-4">

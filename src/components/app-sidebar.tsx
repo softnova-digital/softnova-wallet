@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -62,6 +62,11 @@ function SidebarInner({ userData }: AppSidebarProps) {
   const router      = useRouter();
   const queryClient = useQueryClient();
   const { state, isMobile, setOpenMobile } = useSidebar();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isCollapsed = state === "collapsed" && !isMobile;
 
@@ -185,7 +190,11 @@ function SidebarInner({ userData }: AppSidebarProps) {
           )}
         >
           <div className="shrink-0">
-            <UserButton />
+            {mounted ? (
+              <UserButton />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-sidebar-accent animate-pulse" />
+            )}
           </div>
 
           {!isCollapsed && (

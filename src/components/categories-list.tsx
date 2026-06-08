@@ -74,6 +74,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
 
       toast.success("Category deleted");
       setDeleteCategory(null);
+      setEditCategory(null);
       setDeleteError(null);
       router.refresh();
     } catch (error) {
@@ -104,8 +105,9 @@ export function CategoriesList({ categories }: CategoriesListProps) {
           return (
             <Card 
               key={category.id} 
-              className="relative card-interactive hover-lift animate-fade-in-up overflow-hidden group"
+              className="relative card-interactive hover-lift animate-fade-in-up overflow-hidden group cursor-pointer"
               style={{ animationDelay: `${index * 25}ms` }}
+              onClick={() => setEditCategory(category)}
             >
               {/* Color accent bar */}
               <div 
@@ -113,59 +115,34 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                 style={{ backgroundColor: category.color }}
               />
               
-              <CardContent className="p-4 pt-5">
+              <CardContent className="p-3 sm:p-4 sm:pt-5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
-                      className="p-3 rounded-xl transition-all duration-200 group-hover:scale-110"
+                      className="p-2 sm:p-3 rounded-xl transition-all duration-200 group-hover:scale-110"
                       style={{ backgroundColor: category.color + "20" }}
                     >
                       <Icon
-                        className="h-6 w-6"
+                        className="h-5 w-5 sm:h-6 sm:w-6"
                         style={{ color: category.color }}
                       />
                     </div>
                     <div>
-                      <h3 className="font-semibold">{category.name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-semibold text-sm sm:text-base leading-tight">{category.name}</h3>
+                        {category.isDefault && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0 leading-none shrink-0 font-normal">
+                            Default
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-tight">
                         {category.type === "EXPENSE" 
                           ? `${category._count?.expenses || 0} expense${(category._count?.expenses || 0) !== 1 ? "s" : ""}`
                           : `${category._count?.incomes || 0} income${(category._count?.incomes || 0) !== 1 ? "s" : ""}`
                         }
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {category.isDefault && (
-                      <Badge variant="secondary" className="text-xs">
-                        Default
-                      </Badge>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="animate-scale-in">
-                        <DropdownMenuItem
-                          onClick={() => setEditCategory(category)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => {
-                            setDeleteError(null);
-                            setDeleteCategory(category);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </div>
               </CardContent>
@@ -176,9 +153,9 @@ export function CategoriesList({ categories }: CategoriesListProps) {
 
       {/* Edit Dialog */}
       <Dialog open={!!editCategory} onOpenChange={() => setEditCategory(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+        <DialogContent className="max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border-border/80 p-5 sm:p-6">
+          <DialogHeader className="mb-1">
+            <DialogTitle className="text-xl font-semibold">Edit Category</DialogTitle>
           </DialogHeader>
           {editCategory && (
             <CategoryForm
@@ -187,6 +164,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                 setEditCategory(null);
                 router.refresh();
               }}
+              onDelete={() => setDeleteCategory(editCategory)}
             />
           )}
         </DialogContent>

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,9 +44,12 @@ interface CategoryFormProps {
     type: "EXPENSE" | "INCOME";
     icon: string;
     color: string;
+    isDefault?: boolean;
   };
-  defaultType?: "EXPENSE" | "INCOME"; // Default type when creating new category
+  defaultType?: "EXPENSE" | "INCOME";
   onSuccess?: () => void;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
 const colorOptions = [
@@ -61,7 +65,13 @@ const colorOptions = [
   { name: "Indigo", value: "#3F51B5" },
 ];
 
-export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: CategoryFormProps) {
+export function CategoryForm({
+  category,
+  defaultType = "EXPENSE",
+  onSuccess,
+  onDelete,
+  isDeleting,
+}: CategoryFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -113,7 +123,7 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         <FormField
           control={form.control}
           name="name"
@@ -136,7 +146,7 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
               <FormLabel>Type</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!category}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select category type" />
                   </SelectTrigger>
                 </FormControl>
@@ -147,7 +157,7 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
               </Select>
               <FormMessage />
               {category && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground -mt-3">
                   Category type cannot be changed after creation
                 </p>
               )}
@@ -163,7 +173,7 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
               <FormLabel>Icon</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select an icon" />
                   </SelectTrigger>
                 </FormControl>
@@ -196,7 +206,7 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
               <FormLabel>Color</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a color" />
                   </SelectTrigger>
                 </FormControl>
@@ -220,8 +230,8 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
         />
 
         {/* Preview */}
-        <div className="p-4 bg-accent rounded-lg">
-          <p className="text-sm text-muted-foreground mb-2">Preview</p>
+        <div className="p-4 bg-accent/30 rounded-lg border border-border">
+          <p className="text-xs text-muted-foreground mb-2">Preview</p>
           <div className="flex items-center gap-3">
             <div
               className="p-2 rounded-lg"
@@ -238,12 +248,40 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+        {/* ── Footer buttons ── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 pt-2 border-t border-border/40 mt-1">
+          {/* Delete — only shown when editing and not a default category */}
+          {onDelete && !category?.isDefault && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1 w-full rounded-sm"
+              onClick={onDelete}
+              disabled={isDeleting || isLoading}
+            >
+              {isDeleting ? (
+                <LoadingSpinner size="sm" text="Deleting…" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Category
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Update / Add */}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="flex-1 w-full bg-primary rounded-sm hover:bg-primary/90"
+          >
             {isLoading ? (
-              <LoadingSpinner size="sm" text="Saving..." />
+              <LoadingSpinner size="sm" text="Saving…" />
+            ) : category ? (
+              "Update Category"
             ) : (
-              category ? "Update Category" : "Add Category"
+              "Add Category"
             )}
           </Button>
         </div>
@@ -251,4 +289,3 @@ export function CategoryForm({ category, defaultType = "EXPENSE", onSuccess }: C
     </Form>
   );
 }
-
